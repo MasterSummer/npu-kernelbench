@@ -1,0 +1,29 @@
+{
+  "name": "MoeGatingTopKSoftmax",
+  "op_type": "routing",
+  "axes": {},
+  "inputs": {
+    "x": {
+      "description": "shape varies; supports float16"
+    },
+    "finished": {
+      "description": "shape varies; supports bool; optional, may be None"
+    },
+    "k": {
+      "description": "int, default=2; optional"
+    }
+  },
+  "outputs": {
+    "0": {
+      "description": "Gating output"
+    },
+    "1": {
+      "description": "Top-K indices, int32"
+    },
+    "2": {
+      "description": "Top-K weights"
+    }
+  },
+  "reference": "import torch\nimport torch_npu\n\ndef run(x, finished=None, k=1):\n    return torch_npu.npu_moe_gating_top_k_softmax(x, finished=finished, k=k)\n",
+  "description": "Simple model that performs gating top-k softmax for MoE (Mixture of Experts).\ntorch_npu.npu_moe_gating_top_k_softmax(x, finished=None, k=1) -> (Tensor, Tensor, Tensor)\n\nPure PyTorch implementation (replacing torch_npu.npu_moe_gating_top_k_softmax):\nimport torch\n\ndef run(x, finished=None, k=1):\n    original_shape = x.shape\n    num_experts = original_shape[-1]\n    batch_size = original_shape[:-1].numel()\n\n    x_flat = x.view(-1, num_experts)\n\n    softmax_output = torch.softmax(x_flat, dim=-1)\n\n    topk_values, topk_indices = torch.topk(softmax_output, k, dim=-1)\n    topk_indices = topk_indices.to(torch.int32)\n\n    if finished is not None:\n        finished_flat = finished.view(-1)\n        topk_indices = torch.where(\n            finished_flat.unsqueeze(-1),\n            torch.tensor(num_experts, device=x.device, dtype=torch.int32),\n            topk_indices\n        )\n\n    row_idx = torch.arange(batch_size, device=x.device).unsqueeze(1).repeat(1, k)\n    offset = torch.arange(k, device=x.device).unsqueeze(0).repeat(batch_size, 1) * batch_size\n    row_idx = (row_idx + offset).to(torch.int32)\n\n    output_shape = original_shape[:-1]\n    topk_values = topk_values.view(*output_shape, k)\n    topk_indices = topk_indices.view(*output_shape, k)\n    row_idx = row_idx.view(*output_shape, k)\n\n    return topk_values, topk_indices, row_idx\n"
+}

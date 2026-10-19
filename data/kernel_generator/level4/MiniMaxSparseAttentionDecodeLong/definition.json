@@ -1,0 +1,29 @@
+{
+  "name": "MiniMaxSparseAttentionDecodeLong",
+  "op_type": "attention",
+  "axes": {},
+  "inputs": {
+    "q": {
+      "description": "Main query [B, 64, 128], bfloat16, contiguous, no NaN/Inf; one query token per sample (no MTP), positioned at the last position of each KV sequence."
+    },
+    "index_q": {
+      "description": "Index query [B, 4, 128], bfloat16; one index head per GQA group, used only for block selection scores."
+    },
+    "k": {
+      "description": "Main key [B, L, 4, 128], bfloat16, contiguous, no NaN/Inf; all samples share the same L. Long-document split: L in [131072, 524288]."
+    },
+    "v": {
+      "description": "Main value [B, L, 4, 128], bfloat16, contiguous, no NaN/Inf."
+    },
+    "index_k": {
+      "description": "Shared index key [B, L, 128], bfloat16; shared by all 4 GQA groups for block selection scores."
+    }
+  },
+  "outputs": {
+    "out": {
+      "description": "Per-head context before the W_o projection [B, 64, 128], bfloat16."
+    }
+  },
+  "reference": "import torch\nimport torch.nn.functional as F\n\n\n@torch.no_grad()\ndef run(\n    q: torch.Tensor,\n    index_q: torch.Tensor,\n    k: torch.Tensor,\n    v: torch.Tensor,\n    index_k: torch.Tensor,\n) -> torch.Tensor:\n    B = q.shape[0]\n    L = k.shape[1]\n    block_size = 128\n    topk_blocks = 16\n    group_size = 16\n    scale = 128 ** -0.5\n\n    output = torch.empty((B, 64, 128), device=q.device, dtype=torch.float32)\n    block_offsets = torch.arange(block_size, device=q.device)\n    num_blocks = (L + block_size - 1) // block_size\n    local_block = (L - 1) // block_size\n\n    for b in range(B):\n        token_scores = (\n            index_q[b].float() @ index_k[b].float().T\n        ) * scale\n\n        padded_len = num_blocks * block_size\n        token_scores = F.pad(\n            token_scores,\n            (0, padded_len - L),\n            value=-torch.inf,\n        )\n        block_scores = token_scores.view(\n            4, num_blocks, block_size\n        ).amax(dim=-1)\n\n        block_scores[:, local_block] = torch.inf\n\n        keep = min(topk_blocks, num_blocks)\n        selected_blocks = torch.argsort(\n            block_scores,\n            dim=-1,\n            descending=True,\n            stable=True,\n        )[:, :keep]\n        selected_blocks = selected_blocks.sort(dim=-1).values\n\n        for group in range(4):\n            token_ids = (\n                selected_blocks[group, :, None] * block_size\n                + block_offsets[None, :]\n            ).reshape(-1)\n            token_ids = token_ids[token_ids < L]\n\n            h0 = group * group_size\n            h1 = h0 + group_size\n            selected_k = k[b, token_ids, group].float()\n            selected_v = v[b, token_ids, group].float()\n\n            logits = (\n                q[b, h0:h1].float() @ selected_k.T\n            ) * scale\n            probabilities = torch.softmax(\n                logits, dim=-1, dtype=torch.float32\n            )\n            output[b, h0:h1] = probabilities @ selected_v\n\n    return output.to(torch.bfloat16).contiguous()\n",
+  "description": "MiniMax Sparse Attention (MSA) forward for batched single-step decode (MiniMax-M3). Semantics are identical to the prefill operator with T=1 per sample: index branch scores every key block (block_size=128) with dot(index_q, index_k) * 1/sqrt(128), keeps the local block plus the top-15 scoring blocks (topk_blocks=16, ties by ascending block id); main branch runs FP32 scaled dot-product attention (64 query heads, 4 KV heads, group size 16) over the selected tokens with one softmax per query. Samples are independent and stacked along the batch dimension. Long-document split: KV length L in [131072, 524288]."
+}

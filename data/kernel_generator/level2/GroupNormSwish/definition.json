@@ -1,0 +1,38 @@
+{
+  "name": "GroupNormSwish",
+  "op_type": "norm",
+  "axes": {},
+  "inputs": {
+    "input": {
+      "description": "shape varies; supports float16"
+    },
+    "num_groups": {
+      "description": "int, default=4"
+    },
+    "weight": {
+      "description": "shape varies; supports float16"
+    },
+    "bias": {
+      "description": "shape varies; supports float16"
+    },
+    "eps": {
+      "description": "float, default=1e-05; optional"
+    },
+    "swish_scale": {
+      "description": "float, default=1.0; optional"
+    }
+  },
+  "outputs": {
+    "0": {
+      "description": "Group-normalized + Swish-activated output, same shape as input"
+    },
+    "1": {
+      "description": "Mean per group"
+    },
+    "2": {
+      "description": "Rstd per group"
+    }
+  },
+  "reference": "import torch\nimport torch_npu\n\ndef run(input, num_groups, weight, bias, eps=1e-5, swish_scale=1.0):\n    return torch_npu.npu_group_norm_swish(input, num_groups, weight, bias, eps=eps, swish_scale=swish_scale)\n",
+  "description": "Simple model that performs Group Normalization with Swish activation.\ntorch_npu.npu_group_norm_swish(input, num_groups, weight, bias, eps=1e-5, swish_scale=1.0) -> (Tensor, Tensor, Tensor)\nPure PyTorch implementation (replacing torch_npu.npu_group_norm_swish):\n\ndef forward(self, input, num_groups, weight, bias, eps=1e-5, swish_scale=1.0):\n    N, C = input.shape[0], input.shape[1]\n    # Reshape to [N, num_groups, C//num_groups, ...]\n    input_reshaped = input.view(N, num_groups, C // num_groups, *input.shape[2:])\n\n    # Compute mean and var over dims [2, 3, ...]\n    dims = list(range(2, input_reshaped.ndim))\n    mean = input_reshaped.mean(dim=dims, keepdim=True)\n    var = input_reshaped.var(dim=dims, unbiased=False, keepdim=True)\n\n    # Normalize\n    x_norm = (input_reshaped - mean) / torch.sqrt(var + eps)\n    x_norm = x_norm.view(input.shape)\n\n    # Apply weight and bias\n    if weight is not None:\n        weight = weight.view(1, -1, *([1] * (input.ndim - 2)))\n        x_norm = x_norm * weight\n    if bias is not None:\n        bias = bias.view(1, -1, *([1] * (input.ndim - 2)))\n        x_norm = x_norm + bias\n\n    # Swish activation: x * sigmoid(swish_scale * x)\n    output = x_norm * torch.sigmoid(swish_scale * x_norm)\n\n    # Compute mean and rstd for return\n    mean_out = mean.view(N, num_groups)\n    rstd = 1.0 / torch.sqrt(var + eps)\n    rstd_out = rstd.view(N, num_groups)\n\n    return output, mean_out, rstd_out"
+}

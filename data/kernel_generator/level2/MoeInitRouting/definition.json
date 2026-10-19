@@ -1,0 +1,32 @@
+{
+  "name": "MoeInitRouting",
+  "op_type": "routing",
+  "axes": {},
+  "inputs": {
+    "x": {
+      "description": "shape varies; supports float16"
+    },
+    "row_idx": {
+      "description": "shape varies; supports int32"
+    },
+    "expert_idx": {
+      "description": "shape varies; supports int32"
+    },
+    "active_num": {
+      "description": "int, default=3"
+    }
+  },
+  "outputs": {
+    "0": {
+      "description": "Expanded x features"
+    },
+    "1": {
+      "description": "Expanded row indices, int32"
+    },
+    "2": {
+      "description": "Expanded expert indices, int32"
+    }
+  },
+  "reference": "import torch\n\ndef run(x, row_idx, expert_idx, active_num):\n    num_rows = x.shape[0]\n    row_flat = row_idx.reshape(-1).clamp(0, num_rows - 1).to(torch.int64)\n    expert_flat = expert_idx.reshape(-1)\n    expanded_x = x[row_flat]\n    return expanded_x, row_flat.to(torch.int32), expert_flat\n",
+  "description": "Simple model that initializes routing for MoE (Mixture of Experts).\ntorch_npu.npu_moe_init_routing(x, row_idx, expert_idx, active_num) -> (Tensor, Tensor, Tensor)\nPure PyTorch reference implementation (replacing torch_npu.npu_moe_init_routing):\n\n    def moe_init_routing_torch(x, row_idx, expert_idx, active_num):\n        N, H = x.shape\n        K = expert_idx.shape[1]\n\n        expert_flat = expert_idx.contiguous().view(-1)\n        row_flat = row_idx.contiguous().view(-1)\n\n        # Step 1: Sort by expert_idx ascending (stable), carry row_idx\n        sorted_indices = torch.argsort(expert_flat, stable=True)\n        expanded_expert_idx = expert_flat[sorted_indices]\n        dst_to_src = row_flat[sorted_indices]\n\n        # Step 2: Invert mapping: src_to_dst[dst_to_src[i]] = i\n        src_to_dst = torch.zeros(N * K, dtype=torch.int32, device=x.device)\n        src_to_dst[dst_to_src.long()] = torch.arange(N * K, dtype=torch.int32, device=x.device)\n        expanded_row_idx = src_to_dst\n\n        # Step 3: Gather x rows. dst_to_src[i] % N gives original row in x\n        original_rows = dst_to_src.long() % N\n        expanded_x = x[original_rows]\n\n        return expanded_x, expanded_row_idx, expanded_expert_idx"
+}

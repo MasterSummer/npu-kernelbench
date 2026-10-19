@@ -1,0 +1,20 @@
+{
+  "name": "MoeComputeExpertTokens",
+  "op_type": "routing",
+  "axes": {},
+  "inputs": {
+    "sorted_expert_for_source_row": {
+      "description": "shape varies; supports int32"
+    },
+    "num_expert": {
+      "description": "int, default=8"
+    }
+  },
+  "outputs": {
+    "y": {
+      "description": "Expert token counts, shape [num_expert], int32"
+    }
+  },
+  "reference": "import torch\nimport torch_npu\n\ndef run(sorted_expert_for_source_row, num_expert):\n    x = sorted_expert_for_source_row.clamp(0, num_expert - 1).sort().values\n    return torch_npu.npu_moe_compute_expert_tokens(x, num_expert)\n",
+  "description": "Simple model that computes expert tokens for MoE (Mixture of Experts).\ntorch_npu.npu_moe_compute_expert_tokens(sorted_expert_for_source_row, num_expert) -> Tensor\nPure PyTorch implementation (replacing torch_npu.npu_moe_compute_expert_tokens):\nimport torch\n\ndef run(sorted_expert_for_source_row, num_expert):\n    x = sorted_expert_for_source_row.clamp(0, num_expert - 1)\n    counts = torch.bincount(\n        x.long(),\n        minlength=num_expert\n    )\n    expert_tokens = counts.cumsum(0).to(torch.int32)\n    return expert_tokens\n"
+}

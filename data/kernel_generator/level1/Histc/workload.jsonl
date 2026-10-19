@@ -1,0 +1,15 @@
+{"uuid":"Histc-001","axes":null,"inputs":{"x":{"type":"random","shape":[9226],"dtype":"float32"},"bins":{"type":"scalar","value":100},"min":{"type":"scalar","value":0.0},"max":{"type":"scalar","value":1.0}}}
+{"uuid":"Histc-002","axes":null,"inputs":{"x":{"type":"random","shape":[9697],"dtype":"float32"},"bins":{"type":"scalar","value":100},"min":{"type":"scalar","value":0.0},"max":{"type":"scalar","value":1.0}}}
+{"uuid":"Histc-003","axes":null,"inputs":{"x":{"type":"random","shape":[358,358],"dtype":"float32"},"bins":{"type":"scalar","value":32},"min":{"type":"scalar","value":0.0},"max":{"type":"scalar","value":10.0}}}
+{"uuid":"Histc-004","axes":null,"inputs":{"x":{"type":"random","shape":[393,393],"dtype":"float16"},"bins":{"type":"scalar","value":50},"min":{"type":"scalar","value":-1.0},"max":{"type":"scalar","value":1.0}}}
+{"uuid":"Histc-005","axes":null,"inputs":{"x":{"type":"random","shape":[209434],"dtype":"float16"},"bins":{"type":"scalar","value":128},"min":{"type":"scalar","value":-1.0},"max":{"type":"scalar","value":1.0}}}
+{"uuid":"Histc-006","axes":null,"inputs":{"x":{"type":"random","shape":[758944],"dtype":"float32"},"bins":{"type":"scalar","value":100},"min":{"type":"scalar","value":-2.0},"max":{"type":"scalar","value":2.0}}}
+{"uuid":"Histc-007","axes":null,"inputs":{"x":{"type":"random","shape":[774982],"dtype":"float32"},"bins":{"type":"scalar","value":32},"min":{"type":"scalar","value":0.0},"max":{"type":"scalar","value":100.0}}}
+{"uuid":"Histc-008","axes":null,"inputs":{"x":{"type":"random","shape":[782169],"dtype":"float32"},"bins":{"type":"scalar","value":256},"min":{"type":"scalar","value":-5.0},"max":{"type":"scalar","value":5.0}}}
+{"uuid":"Histc-009","axes":null,"inputs":{"x":{"type":"random","shape":[920,920],"dtype":"float16"},"bins":{"type":"scalar","value":100},"min":{"type":"scalar","value":0.0},"max":{"type":"scalar","value":1.0}}}
+{"uuid":"Histc-010","axes":null,"inputs":{"x":{"type":"random","shape":[927212],"dtype":"float16"},"bins":{"type":"scalar","value":64},"min":{"type":"scalar","value":0.0},"max":{"type":"scalar","value":1.0}}}
+{"uuid":"Histc-011","axes":null,"inputs":{"x":{"type":"random","shape":[699,1397],"dtype":"float32"},"bins":{"type":"scalar","value":128},"min":{"type":"scalar","value":-3.0},"max":{"type":"scalar","value":3.0}}}
+{"uuid":"Histc-012","axes":null,"inputs":{"x":{"type":"random","shape":[1908057],"dtype":"float32"},"bins":{"type":"scalar","value":64},"min":{"type":"scalar","value":0.0},"max":{"type":"scalar","value":10.0}}}
+{"uuid":"Histc-013","axes":null,"inputs":{"x":{"type":"random","shape":[2154665],"dtype":"float16"},"bins":{"type":"scalar","value":64},"min":{"type":"scalar","value":0.0},"max":{"type":"scalar","value":1.0}}}
+{"uuid":"Histc-014","axes":null,"inputs":{"x":{"type":"random","shape":[2293944],"dtype":"float32"},"bins":{"type":"scalar","value":50},"min":{"type":"scalar","value":-1.0},"max":{"type":"scalar","value":1.0}}}
+{"uuid":"Histc-015","axes":null,"inputs":{"x":{"type":"random","shape":[7616787],"dtype":"float32"},"bins":{"type":"scalar","value":128},"min":{"type":"scalar","value":0.0},"max":{"type":"scalar","value":1.0}}}

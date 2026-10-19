@@ -1,0 +1,56 @@
+{
+  "name": "FusedRopeWithQkNormAndKvCacheUpdate",
+  "op_type": "norm",
+  "axes": {},
+  "inputs": {
+    "query": {
+      "description": "shape varies; supports bfloat16"
+    },
+    "key": {
+      "description": "shape varies; supports bfloat16"
+    },
+    "value": {
+      "description": "shape varies; supports bfloat16"
+    },
+    "position_ids": {
+      "description": "shape varies; supports int64"
+    },
+    "key_cache": {
+      "description": "shape varies; supports bfloat16"
+    },
+    "value_cache": {
+      "description": "shape varies; supports bfloat16"
+    },
+    "cache_position": {
+      "description": "shape varies; supports int64"
+    },
+    "q_norm_weight": {
+      "description": "shape varies; supports bfloat16"
+    },
+    "k_norm_weight": {
+      "description": "shape varies; supports bfloat16"
+    },
+    "inv_freq": {
+      "description": "shape varies; supports float32"
+    },
+    "rms_norm_eps": {
+      "description": "float, default=1e-06"
+    }
+  },
+  "outputs": {
+    "0": {
+      "description": "Rotated query"
+    },
+    "1": {
+      "description": "Rotated key"
+    },
+    "2": {
+      "description": "Updated key_cache"
+    },
+    "3": {
+      "description": "Updated value_cache"
+    }
+  },
+  "reference": "import torch\nimport torch.nn.functional as F\n\ndef run(query, key, value, position_ids, key_cache, value_cache, cache_position, q_norm_weight, k_norm_weight, inv_freq, rms_norm_eps=1e-6):\n    q_normed = F.rms_norm(query.to(torch.float32), [query.shape[-1]], q_norm_weight.to(torch.float32), rms_norm_eps).to(query.dtype)\n    k_normed = F.rms_norm(key.to(torch.float32), [key.shape[-1]], k_norm_weight.to(torch.float32), rms_norm_eps).to(key.dtype)\n    freqs = position_ids.float().unsqueeze(-1) * inv_freq.float()\n    emb = torch.cat((freqs, freqs), dim=-1)\n    cos = emb.cos().unsqueeze(1).to(query.dtype)\n    sin = emb.sin().unsqueeze(1).to(query.dtype)\n    half = q_normed.shape[-1] // 2\n    q_rot = torch.cat((-q_normed[..., half:], q_normed[..., :half]), dim=-1)\n    query_rotated = q_normed * cos + q_rot * sin\n    k_rot = torch.cat((-k_normed[..., half:], k_normed[..., :half]), dim=-1)\n    key_rotated = k_normed * cos + k_rot * sin\n    _dev = key_cache.device\n    key_cache_out = key_cache.clone().cpu()\n    value_cache_out = value_cache.clone().cpu()\n    _cp = cache_position.cpu()\n    _order = torch.argsort(_cp, stable=True)\n    _cp_s = _cp[_order]\n    _is_last = torch.ones(_cp_s.shape[0], dtype=torch.bool)\n    _is_last[:-1] = _cp_s[:-1] != _cp_s[1:]\n    _last_idx = _order[_is_last]\n    _ucp = _cp[_last_idx]\n    _kr = key_rotated.to(key_cache_out.dtype).cpu()[:, :, _last_idx]\n    _vv = value.to(value_cache_out.dtype).cpu()[:, :, _last_idx]\n    key_cache_out.index_copy_(2, _ucp, _kr)\n    value_cache_out.index_copy_(2, _ucp, _vv)\n    key_cache_out = key_cache_out.to(_dev)\n    value_cache_out = value_cache_out.to(_dev)\n    return query_rotated, key_rotated, key_cache_out, value_cache_out\n",
+  "description": "Fused RoPE + QK normalization + KV cache update. Applies rotary position embedding, Q/K norm, and updates key/value cache. Pure PyTorch: RoPE computation + RMSNorm on Q/K + scatter into cache."
+}

@@ -1,0 +1,59 @@
+{
+  "name": "GroupedMatmulSwigluQuantV2",
+  "op_type": "matmul",
+  "axes": {},
+  "inputs": {
+    "x": {
+      "description": "input matrix (m, k), dtype int8"
+    },
+    "weight": {
+      "description": "weight list, each element (k, n), dtype int8"
+    },
+    "weight_scale": {
+      "description": "per-channel weight dequantization scale, dtype float32"
+    },
+    "x_scale": {
+      "description": "per-token input dequantization scale, dtype float32"
+    },
+    "group_list": {
+      "description": "int64 tensor of group boundaries (cumsum or count per group_list_type)"
+    },
+    "smooth_scale": {
+      "description": "optional smooth quant scale, dtype float32"
+    },
+    "weight_assist_matrix": {
+      "description": "optional weight assist matrix for pergroup dequant, dtype float32"
+    },
+    "bias": {
+      "description": "optional bias term, dtype int32"
+    },
+    "dequant_mode": {
+      "description": "int, default=0; optional"
+    },
+    "dequant_dtype": {
+      "description": "int, default=0; optional"
+    },
+    "quant_mode": {
+      "description": "int, default=0; optional"
+    },
+    "quant_dtype": {
+      "description": "int, default=0; optional"
+    },
+    "group_list_type": {
+      "description": "int, default=0; optional"
+    },
+    "tuning_config": {
+      "description": "optional list of int for kernel tuning configuration"
+    }
+  },
+  "outputs": {
+    "0": {
+      "description": "Quantized output"
+    },
+    "1": {
+      "description": "Output quantization scale"
+    }
+  },
+  "reference": "import torch\nimport torch_npu\n\ntorch.npu.config.allow_internal_format = True\n\ndef _cast_list_to_nz(tensor_list):\n    if tensor_list is None:\n        return None\n    result = []\n    for t in tensor_list:\n        if not isinstance(t, torch.Tensor):\n            result.append(t)\n            continue\n        if t.device.type != 'npu':\n            t = t.npu()\n        fmt = torch_npu.get_npu_format(t)\n        if fmt != 29:\n            t = torch_npu.npu_format_cast(t, 29)\n        result.append(t)\n    return result\n\ndef run(x: torch.Tensor, weight: torch.Tensor, weight_scale: torch.Tensor, x_scale: torch.Tensor, group_list: torch.Tensor, smooth_scale=None, weight_assist_matrix=None, bias=None, dequant_mode=0, dequant_dtype=0, quant_mode=0, quant_dtype=0, group_list_type=0, tuning_config=None):\n    if group_list is None:\n        group_list = torch.tensor([x.shape[0]], dtype=torch.int64, device=x.device)\n    if isinstance(group_list, list):\n        group_list = torch.tensor(group_list, dtype=torch.int64, device=x.device)\n    w_list = [weight]\n    ws_list = [weight_scale]\n    w_list = _cast_list_to_nz(w_list)\n    if weight_assist_matrix is not None:\n        weight_assist_matrix = _cast_list_to_nz(weight_assist_matrix)\n    quant_out, quant_scale = torch_npu.npu_grouped_matmul_swiglu_quant_v2(\n        x, w_list, ws_list, x_scale, group_list,\n        smooth_scale=smooth_scale,\n        weight_assist_matrix=weight_assist_matrix,\n        bias=bias,\n        dequant_mode=dequant_mode,\n        dequant_dtype=dequant_dtype,\n        quant_mode=quant_mode,\n        quant_dtype=quant_dtype,\n        group_list_type=group_list_type,\n        tuning_config=tuning_config\n    )\n    return quant_out, quant_scale\n",
+  "description": "Model that performs Grouped Matmul + SwiGLU + Quant computation using NPU accelerated npu_grouped_matmul_swiglu_quant_v2.\nFuses grouped matrix multiplication, SwiGLU activation, and quantization.\n\nPure PyTorch reference implementation (decomposing the fused operator into basic ops):\nimport torch\n\ndef run(x, weight, weight_scale, x_scale, group_list, smooth_scale=None, weight_assist_matrix=None, bias=None, dequant_mode=0, dequant_dtype=0, quant_mode=0, quant_dtype=0, group_list_type=0, tuning_config=None):\n    if dequant_mode is None: dequant_mode = 0\n    if dequant_dtype is None: dequant_dtype = 0\n    if quant_mode is None: quant_mode = 0\n    if quant_dtype is None: quant_dtype = 0\n    if group_list_type is None: group_list_type = 0\n    if not isinstance(group_list, torch.Tensor):\n        group_list = torch.tensor(group_list, dtype=torch.int64, device=x.device)\n    m, k = x.shape\n    e = len(weight)\n\n    if group_list_type == 0:\n        cumsum = torch.cat([torch.zeros(1, dtype=group_list.dtype, device=x.device), group_list])\n        token_counts = cumsum[1:] - cumsum[:-1]\n    else:\n        token_counts = group_list\n        cumsum = torch.zeros(e + 1, dtype=torch.int64, device=x.device)\n        cumsum[1:] = torch.cumsum(token_counts, dim=0)\n\n    outputs = []\n    for g in range(e):\n        start = cumsum[g].item()\n        end = cumsum[g + 1].item()\n\n        x_g = x[start:end, :]\n        x_s_g = x_scale[start:end]\n\n        x_deq = x_g.to(torch.float32) * x_s_g.unsqueeze(1)\n\n        W_g = weight[g]\n        W_s_g = weight_scale[g]\n\n        if dequant_mode == 0:\n            W_deq = W_g.to(torch.float32) * W_s_g.to(torch.float32)\n        elif dequant_mode == 1 and W_s_g.dim() == 2:\n            W_deq = W_g.to(torch.float32) * W_s_g.to(torch.float32)\n        elif dequant_mode == 1 and W_s_g.dim() == 3:\n            k_group = W_s_g.shape[0]\n            repeats = W_g.shape[0] // k_group\n            W_s_exp = W_s_g.to(torch.float32).repeat_interleave(repeats, dim=0)\n            W_deq = W_g.to(torch.float32) * W_s_exp\n        else:\n            W_deq = W_g.to(torch.float32) * W_s_g.to(torch.float32)\n\n        hidden = x_deq @ W_deq\n\n        if bias is not None:\n            hidden = hidden + bias[g].to(torch.float32)\n\n        if weight_assist_matrix is not None and weight_assist_matrix[g] is not None:\n            hidden = hidden + weight_assist_matrix[g].to(torch.float32)\n\n        n = hidden.shape[1]\n        half = n // 2\n        left = hidden[:, :half]\n        right = hidden[:, half:]\n        swiglu_out = torch.nn.functional.silu(left) * right\n\n        if smooth_scale is not None:\n            smooth_g = smooth_scale[g].to(torch.float32)\n            swiglu_out = swiglu_out * smooth_g\n\n        abs_max = swiglu_out.abs().max(dim=1, keepdim=True).values\n        safe_max = abs_max.clamp(min=1e-12)\n        out_scale_g = safe_max / 127.0\n        q_out = (swiglu_out / out_scale_g).round().clamp(-128, 127).to(torch.int8)\n        out_scale_g = (abs_max / 127.0).squeeze(1)\n\n        outputs.append((q_out, out_scale_g))\n\n    output = torch.cat([o[0] for o in outputs], dim=0)\n    output_scale = torch.cat([o[1] for o in outputs], dim=0)\n\n    return output, output_scale\n"
+}

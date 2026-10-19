@@ -1,0 +1,35 @@
+{
+  "name": "AdaptiveInstanceNormalization2DBackward",
+  "op_type": "norm",
+  "axes": {},
+  "inputs": {
+    "grad_output": {
+      "description": "shape varies; supports float32"
+    },
+    "x": {
+      "description": "shape varies; supports float32"
+    },
+    "weight": {
+      "description": "shape varies; supports float32"
+    },
+    "mean": {
+      "description": "shape varies; supports float32"
+    },
+    "std": {
+      "description": "shape varies; supports float32"
+    }
+  },
+  "outputs": {
+    "0": {
+      "description": "Gradient w.r.t. input"
+    },
+    "1": {
+      "description": "Gradient w.r.t. weight"
+    },
+    "2": {
+      "description": "Gradient w.r.t. bias"
+    }
+  },
+  "reference": "import torch\n\ndef run(grad_output, x, weight, mean, std):\n    N, C, H, W = x.shape\n    grad_input = grad_output * weight.reshape(1, C, 1, 1) / std\n    grad_weight = (grad_output * (x - mean) / std).sum(dim=(0, 2, 3))\n    grad_bias = grad_output.sum(dim=(0, 2, 3))\n    return grad_input, grad_weight, grad_bias\n",
+  "description": "Backward pass of Adaptive Instance Normalization (AdaIN). Computes gradients w.r.t. input, weight, and bias. Pure PyTorch: gradient computation for (x-mean)/std * weight + bias."
+}

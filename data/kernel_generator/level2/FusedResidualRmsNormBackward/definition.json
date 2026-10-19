@@ -1,0 +1,35 @@
+{
+  "name": "FusedResidualRmsNormBackward",
+  "op_type": "norm",
+  "axes": {},
+  "inputs": {
+    "grad_output": {
+      "description": "shape varies; supports bfloat16"
+    },
+    "x": {
+      "description": "shape varies; supports float32"
+    },
+    "normalized": {
+      "description": "shape varies; supports float32"
+    },
+    "rstd": {
+      "description": "shape varies; supports float32"
+    },
+    "weight": {
+      "description": "shape varies; supports float32"
+    }
+  },
+  "outputs": {
+    "0": {
+      "description": "Gradient w.r.t. hidden_states"
+    },
+    "1": {
+      "description": "Gradient w.r.t. residual"
+    },
+    "2": {
+      "description": "Gradient w.r.t. weight"
+    }
+  },
+  "reference": "import torch\n\ndef run(grad_output, x, normalized, rstd, weight):\n    N = normalized.shape[-1]\n    grad_norm = grad_output.to(torch.float32) * weight.to(torch.float32)\n    grad_x = grad_norm * rstd.to(torch.float32) / N\n    mean_grad = grad_x * (-normalized.to(torch.float32))\n    grad_x = grad_x + mean_grad.sum(dim=-1, keepdim=True) * normalized.to(torch.float32)\n    grad_weight = (grad_output.to(torch.float32) * normalized.to(torch.float32)).sum(dim=tuple(range(grad_output.ndim - 1)))\n    grad_hidden = grad_x.to(grad_output.dtype)\n    grad_residual = grad_x.to(grad_output.dtype)\n    return grad_hidden, grad_residual, grad_weight\n",
+  "description": "Backward pass for fused residual + RMSNorm. Computes gradients w.r.t. hidden_states, residual, and weight. Pure PyTorch: gradient computation for RMSNorm with residual addition."
+}

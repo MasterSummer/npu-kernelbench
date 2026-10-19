@@ -1,0 +1,29 @@
+{
+  "name": "pixel_scale_clip_half",
+  "op_type": "elementwise",
+  "axes": {},
+  "inputs": {
+    "x": {
+      "description": "image tensor in NCHW; supports float16"
+    },
+    "scale": {
+      "description": "scalar (float); pixel scale factor"
+    },
+    "bias": {
+      "description": "scalar (float); pixel bias"
+    },
+    "min_val": {
+      "description": "scalar (float); lower clamp bound"
+    },
+    "max_val": {
+      "description": "scalar (float); upper clamp bound"
+    }
+  },
+  "outputs": {
+    "y": {
+      "description": "same shape and dtype as x"
+    }
+  },
+  "reference": "import torch\ndef run(x, scale, bias, min_val, max_val):\n    return torch.clamp(x * scale + bias, min=min_val, max=max_val)\n",
+  "description": "CV fused operator: pixel linear transform (y = scale * x + bias) fused with clamp to [min_val, max_val]. Common in image pre/post processing for pixel value mapping and saturation."
+}

@@ -1,0 +1,51 @@
+{"uuid": "Cat-001", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float32", "shapes": [[4384, 4384], [4384, 8752], [4384, 2192]]}, "dim": {"type": "scalar", "value": 1}}}
+{"uuid": "Cat-002", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float32", "shapes": [[3152, 6320], [3152, 12640], [3152, 3152]]}, "dim": {"type": "scalar", "value": 1}}}
+{"uuid": "Cat-003", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float16", "shapes": [[6592, 3296], [6592, 6592], [6592, 1648]]}, "dim": {"type": "scalar", "value": 1}}}
+{"uuid": "Cat-004", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "bfloat16", "shapes": [[1, 23, 512, 512], [1, 23, 512, 512]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-005", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float16", "shapes": [[224, 224, 848], [224, 432, 848], [224, 224, 848]]}, "dim": {"type": "scalar", "value": 1}}}
+{"uuid": "Cat-006", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float32", "shapes": [[4336, 8688], [4336, 17376], [4336, 4336]]}, "dim": {"type": "scalar", "value": 1}}}
+{"uuid": "Cat-007", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float16", "shapes": [[240, 512, 512], [240, 512, 512], [240, 512, 512]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-008", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float16", "shapes": [[1, 72, 352, 352], [1, 72, 352, 352]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-009", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "bfloat16", "shapes": [[240, 416, 608], [240, 416, 608], [240, 416, 608]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-010", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float32", "shapes": [[1, 67766736], [1, 67766736], [1, 67766736]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-011", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "bfloat16", "shapes": [[384, 384, 192], [384, 384, 192], [384, 384, 192]]}, "dim": {"type": "scalar", "value": 2}}}
+{"uuid": "Cat-012", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float16", "shapes": [[1552, 10528], [1552, 10528]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-013", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float32", "shapes": [[34, 57, 80, 126], [34, 57, 80, 126]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-014", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "bfloat16", "shapes": [[4880, 2448], [4880, 4880]]}, "dim": {"type": "scalar", "value": 1}}}
+{"uuid": "Cat-015", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "bfloat16", "shapes": [[4272, 4272], [4272, 4272]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-016", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "bfloat16", "shapes": [[1, 592, 256, 528], [1, 592, 256, 528]]}, "dim": {"type": "scalar", "value": 2}}}
+{"uuid": "Cat-017", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float16", "shapes": [[1, 464, 416, 416], [1, 464, 416, 416]]}, "dim": {"type": "scalar", "value": -1}}}
+{"uuid": "Cat-018", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "bfloat16", "shapes": [[14960, 3728], [14960, 7488]]}, "dim": {"type": "scalar", "value": 1}}}
+{"uuid": "Cat-019", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "bfloat16", "shapes": [[1456, 22672], [1456, 22672]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-020", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float32", "shapes": [[1, 63, 640, 640], [1, 63, 640, 640]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-021", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float16", "shapes": [[1392, 69616], [1392, 69616]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-022", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "bfloat16", "shapes": [[48, 64, 128, 240], [48, 64, 128, 240]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-023", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float16", "shapes": [[1, 83284192], [1, 83284192]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-024", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float16", "shapes": [[11040, 11040], [11040, 11040]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-025", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float16", "shapes": [[36717872], [36717872], [36717872], [36717872]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-026", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float16", "shapes": [[1, 247, 459, 592], [1, 247, 459, 592], [1, 247, 459, 592]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-027", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float16", "shapes": [[7, 224, 208, 208], [7, 224, 208, 208], [7, 224, 208, 208]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-028", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float16", "shapes": [[240, 480, 976], [240, 480, 976]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-029", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "bfloat16", "shapes": [[5424, 10864], [5424, 10864], [5424, 10864], [5424, 10864]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-030", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float16", "shapes": [[624, 304, 624], [624, 304, 624]]}, "dim": {"type": "scalar", "value": 1}}}
+{"uuid": "Cat-031", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float16", "shapes": [[261, 559, 864], [261, 559, 864]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-032", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float16", "shapes": [[8240, 27808], [8240, 27808], [8240, 27808]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-033", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float32", "shapes": [[4992, 13392], [4992, 13392]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-034", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float32", "shapes": [[1, 464, 400, 400], [1, 464, 400, 400]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-035", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float32", "shapes": [[8656, 8656], [8656, 8656]]}, "dim": {"type": "scalar", "value": 1}}}
+{"uuid": "Cat-036", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float16", "shapes": [[12976, 23648], [12976, 23648], [12976, 23648]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-037", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float32", "shapes": [[150111504], [150111504], [150111504]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-038", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float32", "shapes": [[7376, 14752], [7376, 14752]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-039", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float32", "shapes": [[624, 624, 624], [624, 624, 624]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-040", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float32", "shapes": [[9, 160, 256, 352], [9, 160, 256, 352]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-041", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float32", "shapes": [[1, 752, 656, 336], [1, 752, 656, 336], [1, 752, 656, 336]]}, "dim": {"type": "scalar", "value": 3}}}
+{"uuid": "Cat-042", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float32", "shapes": [[268351344], [268351344]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-043", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float32", "shapes": [[10416, 10416], [10416, 10416], [10416, 10416], [10416, 10416], [10416, 10416]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-044", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float16", "shapes": [[1, 304, 528, 528], [1, 592, 528, 528], [1, 1184, 528, 528]]}, "dim": {"type": "scalar", "value": 1}}}
+{"uuid": "Cat-045", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float32", "shapes": [[11872, 11872], [11872, 11872]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-046", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float32", "shapes": [[8464, 16944], [8464, 16944]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-047", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float16", "shapes": [[20160, 20160], [20160, 20160], [20160, 20160]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-048", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float16", "shapes": [[10496, 41952], [10496, 41952], [10496, 41952]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-049", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float32", "shapes": [[14016, 14016], [14016, 14016]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-050", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "bfloat16", "shapes": [[5760, 34544], [5760, 34544]]}, "dim": {"type": "scalar", "value": 0}}}
+{"uuid": "Cat-051", "axes": null, "inputs": {"tensors": {"type": "tensor_list", "dtype": "float16", "shapes": [[11280, 22560], [11280, 45120], [11280, 11280], [11280, 5648]]}, "dim": {"type": "scalar", "value": 1}}}

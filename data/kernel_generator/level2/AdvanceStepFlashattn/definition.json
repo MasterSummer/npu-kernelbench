@@ -1,0 +1,41 @@
+{
+  "name": "AdvanceStepFlashattn",
+  "op_type": "attention",
+  "axes": {},
+  "inputs": {
+    "input_tokens": {
+      "description": "shape varies; supports int64"
+    },
+    "sampled_token_ids": {
+      "description": "shape varies; supports int64"
+    },
+    "input_positions": {
+      "description": "shape varies; supports int64"
+    },
+    "seq_lens": {
+      "description": "shape varies; supports int64"
+    },
+    "slot_mapping": {
+      "description": "shape varies; supports int64"
+    },
+    "block_tables": {
+      "description": "shape varies; supports int64"
+    },
+    "num_seqs": {
+      "description": "int, default=16"
+    },
+    "num_queries": {
+      "description": "int, default=8"
+    },
+    "block_size": {
+      "description": "int, default=8"
+    }
+  },
+  "outputs": {
+    "y": {
+      "description": "In-place operation: updates k_cache and v_cache. Returns None."
+    }
+  },
+  "reference": "import torch\nimport torch_npu\n\ndef run(input_tokens, sampled_token_ids, input_positions, seq_lens, slot_mapping, block_tables, num_seqs, num_queries, block_size):\n    torch_npu.npu_advance_step_flashattn(input_tokens, sampled_token_ids, input_positions, seq_lens, slot_mapping, block_tables, num_seqs, num_queries, block_size)\n    return input_tokens\n",
+  "description": "Simple model that performs advance step for FlashAttention in vLLM.\ntorch_npu.npu_advance_step_flashattn(input_tokens, sampled_token_ids, input_positions, seq_lens, slot_mapping, block_tables, num_seqs, num_queries, block_size) -> ()\nPure PyTorch implementation (conceptual, as this is an in-place vLLM operation):\n\ndef forward(self, input_tokens, sampled_token_ids, input_positions, seq_lens,\n            slot_mapping, block_tables, num_seqs, num_queries, block_size):\n    # This is a vLLM-specific scheduling operation that updates metadata\n    # for FlashAttention. It's highly hardware-specific.\n\n    # Update input_tokens with sampled_token_ids\n    # Non-speculative: sampled_token_ids is [num_queries, 1]\n    # input_tokens is [num_seqs,] or [num_seqs, 1+spec_num]\n    if sampled_token_ids.dim() == 2:\n        input_tokens[:num_queries] = sampled_token_ids.squeeze(-1)\n    else:\n        input_tokens[:num_queries] = sampled_token_ids\n\n    # Update sequence lengths\n    seq_lens[:num_queries] += 1\n\n    # Update input positions\n    input_positions[:num_queries] = seq_lens[:num_queries] - 1\n\n    # Update slot_mapping (simplified, actual logic depends on block_tables)\n    for i in range(num_queries):\n        seq_len = int(seq_lens[i].item())\n        block_idx = (seq_len - 1) // block_size\n        block_offset = (seq_len - 1) % block_size\n        if block_idx < block_tables.size(1):\n            physical_block = block_tables[i, block_idx]\n            slot_mapping[i] = physical_block * block_size + block_offset\n\n    return None"
+}

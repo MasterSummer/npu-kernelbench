@@ -1,0 +1,29 @@
+{
+  "name": "MaskedSoftmaxWithAttentionDropoutBackward",
+  "op_type": "attention",
+  "axes": {},
+  "inputs": {
+    "grad_output": {
+      "description": "shape varies; supports float32"
+    },
+    "p_attn": {
+      "description": "shape varies; supports float32"
+    },
+    "mask": {
+      "description": "shape varies; supports bool"
+    },
+    "dropout_mask": {
+      "description": "shape varies; supports bool"
+    },
+    "p_dropout": {
+      "description": "float, default=0.0"
+    }
+  },
+  "outputs": {
+    "y": {
+      "description": "Gradient w.r.t. attention scores"
+    }
+  },
+  "reference": "import torch\n\ndef run(grad_output, p_attn, mask, dropout_mask, p_dropout=0.0):\n    grad_scores = grad_output * p_attn\n    sum_grad = grad_scores.sum(dim=-1, keepdim=True)\n    grad_scores = grad_scores - p_attn * sum_grad\n    if mask is not None:\n        grad_scores = grad_scores * mask.to(grad_scores.dtype)\n    if dropout_mask is not None and p_dropout > 0:\n        grad_scores = grad_scores * dropout_mask.to(grad_scores.dtype) / (1.0 - p_dropout)\n    return grad_scores\n",
+  "description": "Backward pass for masked softmax with attention dropout. Computes gradient of softmax given mask and dropout. Pure PyTorch: standard softmax backward with mask/dropout gradient."
+}

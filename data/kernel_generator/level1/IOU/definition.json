@@ -1,0 +1,22 @@
+{
+  "name": "IOU",
+  "axes": {},
+  "inputs": {
+    "bboxes": {
+      "description": "First set of bounding boxes, shape (N, 4). Supports float32, float16."
+    },
+    "gtboxes": {
+      "description": "Second set of bounding boxes (ground truth), shape (M, 4). Same dtype as bboxes."
+    },
+    "mode": {
+      "description": "int, IoU computation mode: 0 = IoU (intersection over union), 1 = IoF (intersection over foreground area)."
+    }
+  },
+  "outputs": {
+    "iou": {
+      "description": "IoU matrix of shape (N, M), same dtype as inputs."
+    }
+  },
+  "reference": "import torch\n\n\ndef bbox_overlaps(bboxes1, bboxes2, mode='iou', aligned=False, offset=0):\n    assert mode in ['iou', 'iof']\n    if aligned:\n        lt = torch.max(bboxes1[:, :2], bboxes2[:, :2])\n        rb = torch.min(bboxes1[:, 2:], bboxes2[:, 2:])\n        wh = (rb - lt + offset).clamp(min=0)\n        overlap = wh[:, 0] * wh[:, 1]\n        area1 = (bboxes1[:, 2] - bboxes1[:, 0] + offset) * (bboxes1[:, 3] - bboxes1[:, 1] + offset)\n        if mode == 'iou':\n            area2 = (bboxes2[:, 2] - bboxes2[:, 0] + offset) * (bboxes2[:, 3] - bboxes2[:, 1] + offset)\n            ious = overlap / (area1 + area2 - overlap)\n        else:\n            ious = overlap / area1\n    else:\n        lt = torch.max(bboxes1[:, None, :2], bboxes2[:, :2])\n        rb = torch.min(bboxes1[:, None, 2:], bboxes2[:, 2:])\n        wh = (rb - lt + offset).clamp(min=0)\n        overlap = wh[:, :, 0] * wh[:, :, 1]\n        area1 = (bboxes1[:, 2] - bboxes1[:, 0] + offset) * (bboxes1[:, 3] - bboxes1[:, 1] + offset)\n        if mode == 'iou':\n            area2 = (bboxes2[:, 2] - bboxes2[:, 0] + offset) * (bboxes2[:, 3] - bboxes2[:, 1] + offset)\n            ious = overlap / (area1[:, None] + area2 - overlap)\n        else:\n            ious = overlap / (area1[:, None])\n    return ious\n\n\ndef run(bboxes, gtboxes, mode=0):\n    b = bboxes.clone()\n    b[:, 0], b[:, 2] = torch.minimum(bboxes[:, 0], bboxes[:, 2]), torch.maximum(bboxes[:, 0], bboxes[:, 2])\n    b[:, 1], b[:, 3] = torch.minimum(bboxes[:, 1], bboxes[:, 3]), torch.maximum(bboxes[:, 1], bboxes[:, 3])\n    g = gtboxes.clone()\n    g[:, 0], g[:, 2] = torch.minimum(gtboxes[:, 0], gtboxes[:, 2]), torch.maximum(gtboxes[:, 0], gtboxes[:, 2])\n    g[:, 1], g[:, 3] = torch.minimum(gtboxes[:, 1], gtboxes[:, 3]), torch.maximum(gtboxes[:, 1], gtboxes[:, 3])\n    mode_str = 'iou' if mode == 0 else 'iof'\n    return bbox_overlaps(b, g, mode=mode_str).t()\n",
+  "description": "IOU: Intersection over Union computation between bounding box sets.\n\nComputes IoU (mode=0: intersection/union) or IoF (mode=1: intersection/foreground_area) between two sets of bounding boxes in (x1, y1, x2, y2) format.\n\nArgs:\n    bboxes (Tensor): shape (N, 4), first set of bounding boxes.\n    gtboxes (Tensor): shape (M, 4), second set of bounding boxes (ground truth).\n    mode (int): 0 = IoU (intersection over union), 1 = IoF (intersection over foreground area).\n\nReturns: Tensor of shape (N, M), same dtype as inputs.\n\n---\nNPU vendor API: torch_npu.npu_iou(bboxes, gtboxes, mode=mode) returns shape (N, M).\nAlso available via mmcv.ops.bbox_overlaps(bboxes, gtboxes, mode=mode).t()."
+}

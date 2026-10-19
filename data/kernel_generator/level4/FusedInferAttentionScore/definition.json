@@ -1,0 +1,137 @@
+{
+  "name": "FusedInferAttentionScore",
+  "op_type": "attention",
+  "axes": {},
+  "inputs": {
+    "query": {
+      "description": "query tensor for inference attention, dtype float16"
+    },
+    "key": {
+      "description": "key tensor for inference attention, dtype float16"
+    },
+    "value": {
+      "description": "value tensor for inference attention, dtype float16"
+    },
+    "pse_shift": {
+      "description": "Tensor, optional; position encoding parameter"
+    },
+    "atten_mask": {
+      "description": "Tensor, optional; attention mask, dtype bool/int8/uint8"
+    },
+    "actual_seq_lengths": {
+      "description": "List[int], optional; valid sequence length per batch for query"
+    },
+    "actual_seq_lengths_kv": {
+      "description": "List[int], optional; valid sequence length per batch for key/value"
+    },
+    "dequant_scale1": {
+      "description": "Tensor, optional; BMM1 dequantization factor, dtype uint64/float32"
+    },
+    "quant_scale1": {
+      "description": "Tensor, optional; BMM2 quantization factor, dtype float32"
+    },
+    "dequant_scale2": {
+      "description": "Tensor, optional; BMM2 dequantization factor, dtype uint64/float32"
+    },
+    "quant_scale2": {
+      "description": "Tensor, optional; output quantization factor, dtype float32/bfloat16"
+    },
+    "quant_offset2": {
+      "description": "Tensor, optional; output quantization offset, dtype float32/bfloat16"
+    },
+    "antiquant_scale": {
+      "description": "Tensor, optional; anti-quantization scale, dtype float16/bfloat16"
+    },
+    "antiquant_offset": {
+      "description": "Tensor, optional; anti-quantization offset, dtype float16/bfloat16"
+    },
+    "block_table": {
+      "description": "Tensor, optional; PageAttention block mapping table, dtype int32"
+    },
+    "query_padding_size": {
+      "description": "Tensor, optional; query right-alignment padding info, dtype int64"
+    },
+    "kv_padding_size": {
+      "description": "Tensor, optional; key/value right-alignment padding info, dtype int64"
+    },
+    "key_antiquant_scale": {
+      "description": "Tensor, optional; key anti-quantization scale"
+    },
+    "key_antiquant_offset": {
+      "description": "Tensor, optional; key anti-quantization offset"
+    },
+    "value_antiquant_scale": {
+      "description": "Tensor, optional; value anti-quantization scale"
+    },
+    "value_antiquant_offset": {
+      "description": "Tensor, optional; value anti-quantization offset"
+    },
+    "key_shared_prefix": {
+      "description": "Tensor, optional; key shared prefix cache"
+    },
+    "value_shared_prefix": {
+      "description": "Tensor, optional; value shared prefix cache"
+    },
+    "actual_shared_prefix_len": {
+      "description": "List[int], optional; shared prefix valid sequence length"
+    },
+    "query_rope": {
+      "description": "Tensor, optional; query rotary position embedding for MLA"
+    },
+    "key_rope": {
+      "description": "Tensor, optional; key rotary position embedding for MLA"
+    },
+    "key_rope_antiquant_scale": {
+      "description": "Tensor, optional; reserved parameter for key rope anti-quantization"
+    },
+    "num_heads": {
+      "description": "int, default=1"
+    },
+    "scale": {
+      "description": "float, default=1.0; optional"
+    },
+    "pre_tokens": {
+      "description": "int, default=2147483647; forward token count for sparse attention"
+    },
+    "next_tokens": {
+      "description": "int, default=2147483647; backward token count for sparse attention"
+    },
+    "input_layout": {
+      "description": "str, tensor layout specifier (BSH/BNSD), default='BSH'"
+    },
+    "num_key_value_heads": {
+      "description": "int, default=0; optional"
+    },
+    "sparse_mode": {
+      "description": "int, default=0; optional"
+    },
+    "inner_precise": {
+      "description": "int, default=0; precision/performance tradeoff mode"
+    },
+    "block_size": {
+      "description": "int, default=0; PageAttention block size"
+    },
+    "antiquant_mode": {
+      "description": "int, default=0; anti-quantization mode, 0=per-channel, 1=per-token"
+    },
+    "softmax_lse_flag": {
+      "description": "bool, default=False; whether to output softmax log-sum-exp"
+    },
+    "key_antiquant_mode": {
+      "description": "int, default=0; key anti-quantization mode"
+    },
+    "value_antiquant_mode": {
+      "description": "int, default=0; value anti-quantization mode"
+    }
+  },
+  "outputs": {
+    "0": {
+      "description": "Attention output"
+    },
+    "1": {
+      "description": "Softmax log-sum-exp"
+    }
+  },
+  "reference": "import torch\nimport torch.nn as nn\n\ndef run(query: torch.Tensor, key: torch.Tensor, value: torch.Tensor, pse_shift=None, atten_mask=None, actual_seq_lengths=None, actual_seq_lengths_kv=None, dequant_scale1=None, quant_scale1=None, dequant_scale2=None, quant_scale2=None, quant_offset2=None, antiquant_scale=None, antiquant_offset=None, block_table=None, query_padding_size=None, kv_padding_size=None, key_antiquant_scale=None, key_antiquant_offset=None, value_antiquant_scale=None, value_antiquant_offset=None, key_shared_prefix=None, value_shared_prefix=None, actual_shared_prefix_len=None, query_rope=None, key_rope=None, key_rope_antiquant_scale=None, num_heads=1, scale=1.0, pre_tokens=2147483647, next_tokens=2147483647, input_layout='BSH', num_key_value_heads=0, sparse_mode=0, inner_precise=0, block_size=0, antiquant_mode=0, softmax_lse_flag=False, key_antiquant_mode=0, value_antiquant_mode=0):\n    import torch_npu\n    if num_heads is None:\n        num_heads = 1\n    if scale is None:\n        scale = 1.0\n    if pre_tokens is None:\n        pre_tokens = 2147483647\n    if next_tokens is None:\n        next_tokens = 2147483647\n    if input_layout is None:\n        input_layout = 'BSH'\n    if num_key_value_heads is None:\n        num_key_value_heads = 0\n    if sparse_mode is None:\n        sparse_mode = 0\n    if inner_precise is None:\n        inner_precise = 0\n    if block_size is None:\n        block_size = 0\n    if antiquant_mode is None:\n        antiquant_mode = 0\n    if softmax_lse_flag is None:\n        softmax_lse_flag = False\n    if key_antiquant_mode is None:\n        key_antiquant_mode = 0\n    if value_antiquant_mode is None:\n        value_antiquant_mode = 0\n    effective_nkv = num_key_value_heads if num_key_value_heads > 0 else num_heads\n    return torch_npu.npu_fused_infer_attention_score(query, key, value, pse_shift=pse_shift, atten_mask=atten_mask, actual_seq_lengths=actual_seq_lengths, actual_seq_lengths_kv=actual_seq_lengths_kv, dequant_scale1=dequant_scale1, quant_scale1=quant_scale1, dequant_scale2=dequant_scale2, quant_scale2=quant_scale2, quant_offset2=quant_offset2, antiquant_scale=antiquant_scale, antiquant_offset=antiquant_offset, block_table=block_table, query_padding_size=query_padding_size, kv_padding_size=kv_padding_size, key_antiquant_scale=key_antiquant_scale, key_antiquant_offset=key_antiquant_offset, value_antiquant_scale=value_antiquant_scale, value_antiquant_offset=value_antiquant_offset, key_shared_prefix=key_shared_prefix, value_shared_prefix=value_shared_prefix, actual_shared_prefix_len=actual_shared_prefix_len, query_rope=query_rope, key_rope=key_rope, key_rope_antiquant_scale=key_rope_antiquant_scale, num_heads=num_heads, scale=scale, pre_tokens=pre_tokens, next_tokens=next_tokens, input_layout=input_layout, num_key_value_heads=effective_nkv, sparse_mode=sparse_mode, inner_precise=inner_precise, block_size=block_size, antiquant_mode=antiquant_mode, softmax_lse_flag=softmax_lse_flag, key_antiquant_mode=key_antiquant_mode, value_antiquant_mode=value_antiquant_mode)\n",
+  "description": "Model that performs fused inference attention score computation using NPU accelerated npu_fused_infer_attention_score.\nSupports both prompt (full) and incremental inference scenarios for FlashAttention.\n\nTorch native implementation (equivalent to npu_fused_infer_attention_score for standard MHA path):\nimport torch\n\ndef run(query, key, value, pse_shift=None, atten_mask=None, actual_seq_lengths=None, actual_seq_lengths_kv=None, dequant_scale1=None, quant_scale1=None, dequant_scale2=None, quant_scale2=None, quant_offset2=None, antiquant_scale=None, antiquant_offset=None, block_table=None, query_padding_size=None, kv_padding_size=None, key_antiquant_scale=None, key_antiquant_offset=None, value_antiquant_scale=None, value_antiquant_offset=None, key_shared_prefix=None, value_shared_prefix=None, actual_shared_prefix_len=None, query_rope=None, key_rope=None, key_rope_antiquant_scale=None, num_heads=1, scale=1.0, pre_tokens=2147483647, next_tokens=2147483647, input_layout='BSH', num_key_value_heads=0, sparse_mode=0, inner_precise=0, block_size=0, antiquant_mode=0, softmax_lse_flag=False, key_antiquant_mode=0, value_antiquant_mode=0):\n    kv_heads = num_key_value_heads if num_key_value_heads else num_heads\n\n    if input_layout == \"BSH\":\n        batch_size, seq_len, hidden = query.shape\n        _, seq_len_kv, _ = key.shape\n        head_dim = hidden // num_heads\n        q = query.view(batch_size, seq_len, num_heads, head_dim).transpose(1, 2)\n        k = key.view(batch_size, seq_len_kv, kv_heads, head_dim).transpose(1, 2)\n        v = value.view(batch_size, seq_len_kv, kv_heads, head_dim).transpose(1, 2)\n    elif input_layout == \"BSND\":\n        batch_size, seq_len, n_q, head_dim = query.shape\n        _, seq_len_kv, n_kv, _ = key.shape\n        q = query.transpose(1, 2)\n        k = key.transpose(1, 2)\n        v = value.transpose(1, 2)\n    elif input_layout == \"BNSD\":\n        q, k, v = query, key, value\n        batch_size = q.shape[0]\n        seq_len = q.shape[2]\n        seq_len_kv = k.shape[2]\n        head_dim = q.shape[-1]\n    else:\n        raise NotImplementedError(f\"Layout {input_layout} not supported\")\n\n    if kv_heads != num_heads:\n        n_rep = num_heads // kv_heads\n        k = k.repeat_interleave(n_rep, dim=1)\n        v = v.repeat_interleave(n_rep, dim=1)\n\n    scores = torch.matmul(q.float(), k.float().transpose(-2, -1)) * scale\n\n    i = torch.arange(seq_len, device=q.device).unsqueeze(1)\n    j = torch.arange(seq_len_kv, device=q.device).unsqueeze(0)\n    if sparse_mode == 4:\n        pre = pre_tokens if (pre_tokens is not None and pre_tokens != 2147483647) else seq_len\n        nxt = next_tokens if (next_tokens is not None and next_tokens != 2147483647) else seq_len_kv\n        band = (j > (i + nxt)) | (j < (i - pre))\n        scores = scores.masked_fill(band.unsqueeze(0).unsqueeze(0), float('-inf'))\n    elif atten_mask is not None:\n        if atten_mask.dim() == 2:\n            am = atten_mask[:seq_len, :seq_len_kv]\n        elif atten_mask.dim() == 3:\n            am = atten_mask[:, :seq_len, :seq_len_kv]\n        else:\n            am = atten_mask\n        if atten_mask.dtype == torch.bool:\n            scores = scores.masked_fill(am, float('-inf'))\n        else:\n            scores = scores + am.float()\n    else:\n        if sparse_mode == 2:\n            causal = j > i\n            scores = scores.masked_fill(causal.unsqueeze(0).unsqueeze(0), float('-inf'))\n        elif sparse_mode == 3:\n            offset = seq_len_kv - seq_len\n            causal = j > (i + offset)\n            scores = scores.masked_fill(causal.unsqueeze(0).unsqueeze(0), float('-inf'))\n\n    attn_weights = torch.softmax(scores, dim=-1)\n    out = torch.matmul(attn_weights, v.float())\n\n    if input_layout in (\"BSH\", \"BSND\"):\n        out = out.transpose(1, 2).contiguous()\n        if input_layout == \"BSH\":\n            out = out.view(batch_size, seq_len, -1)\n        else:\n            out = out.view(batch_size, seq_len, num_heads, head_dim)\n    elif input_layout == \"BNSD\":\n        out = out\n\n    out = out.to(query.dtype)\n    return out, torch.zeros(1, dtype=torch.float32, device=out.device)\n"
+}

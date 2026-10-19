@@ -1,0 +1,47 @@
+{
+  "name": "KvCacheUpdateWithRopeBackward",
+  "op_type": "norm",
+  "axes": {},
+  "inputs": {
+    "grad_key_cache": {
+      "description": "shape varies; supports float32"
+    },
+    "grad_value_cache": {
+      "description": "shape varies; supports float32"
+    },
+    "key_states": {
+      "description": "shape varies; supports float32"
+    },
+    "cos": {
+      "description": "shape varies; supports float32"
+    },
+    "sin": {
+      "description": "shape varies; supports float32"
+    },
+    "cache_position": {
+      "description": "shape varies; supports int64"
+    }
+  },
+  "outputs": {
+    "0": {
+      "description": "Gradient w.r.t. key_states, bfloat16"
+    },
+    "1": {
+      "description": "Gradient w.r.t. value_states, bfloat16"
+    },
+    "2": {
+      "description": "Gradient w.r.t. cos"
+    },
+    "3": {
+      "description": "Gradient w.r.t. sin"
+    },
+    "4": {
+      "description": "Gradient w.r.t. key_cache_input"
+    },
+    "5": {
+      "description": "Gradient w.r.t. value_cache_input"
+    }
+  },
+  "reference": "import torch\n\ndef run(grad_key_cache, grad_value_cache, key_states, cos, sin, cache_position):\n    grad_key_states = grad_key_cache[:, :, cache_position]\n    grad_value_states = grad_value_cache[:, :, cache_position]\n    half = key_states.shape[-1] // 2\n    grad_cos = (grad_key_states[..., :half] * key_states[..., :half] + grad_key_states[..., half:] * (-key_states[..., half:])).sum(dim=(0, 1, 2))\n    grad_sin = (grad_key_states[..., :half] * (-key_states[..., half:]) + grad_key_states[..., half:] * key_states[..., :half]).sum(dim=(0, 1, 2))\n    grad_key_cache_input = grad_key_cache.clone()\n    grad_value_cache_input = grad_value_cache.clone()\n    return (grad_key_states.to(torch.bfloat16), grad_value_states.to(torch.bfloat16),\n            grad_cos.to(torch.bfloat16), grad_sin.to(torch.bfloat16),\n            grad_key_cache_input.to(torch.bfloat16), grad_value_cache_input.to(torch.bfloat16))\n",
+  "description": "Backward pass for KV cache update with RoPE. Computes 6 gradient tensors for key/value states, cos/sin, and cache inputs. All outputs in bfloat16."
+}

@@ -1,0 +1,41 @@
+{
+  "name": "SwigluQuant",
+  "op_type": "quantization",
+  "axes": {},
+  "inputs": {
+    "x": {
+      "description": "shape varies; supports float32"
+    },
+    "smooth_scales": {
+      "description": "shape varies; supports float32; optional, may be None"
+    },
+    "offsets": {
+      "description": "shape varies; supports float32; optional, may be None"
+    },
+    "group_index": {
+      "description": "shape varies; supports int32; optional, may be None"
+    },
+    "activate_left": {
+      "description": "bool, default=True; optional"
+    },
+    "quant_mode": {
+      "description": "int, default=1; optional"
+    },
+    "group_list_type": {
+      "description": "int, default=0; optional"
+    },
+    "dst_type": {
+      "description": "dtype; optional"
+    }
+  },
+  "outputs": {
+    "0": {
+      "description": "Quantized output, int8"
+    },
+    "1": {
+      "description": "Quantization scales"
+    }
+  },
+  "reference": "import torch\nimport torch_npu\n\n_DST_TYPE_MAP = {\"int4\": torch.quint4x2, \"int8\": torch.int8}\n\ndef run(x, smooth_scales=None, offsets=None, group_index=None, activate_left=False, quant_mode=0, group_list_type=0, dst_type=None):\n    if isinstance(dst_type, str):\n        dst_type = _DST_TYPE_MAP.get(dst_type, dst_type)\n    return torch_npu.npu_swiglu_quant(x, smooth_scales=smooth_scales, offsets=offsets, group_index=group_index, activate_left=activate_left, quant_mode=quant_mode, group_list_type=group_list_type, dst_type=dst_type)\n",
+  "description": "Simple model that performs SwiGLU with quantization.\ntorch_npu.npu_swiglu_quant(x, *, smooth_scales=None, offsets=None, group_index=None, activate_left=False, quant_mode=0, group_list_type=0, dst_type=None) -> (Tensor, Tensor)\nPyTorch native implementation of forward function\nimport torch\n\n_DST_TYPE_MAP = {\"int4\": torch.quint4x2, \"int8\": torch.int8}\n\ndef run(x, smooth_scales=None, offsets=None, group_index=None, activate_left=False, quant_mode=0, group_list_type=0, dst_type=None):\n    if isinstance(dst_type, str):\n        dst_type = _DST_TYPE_MAP.get(dst_type, dst_type)\n    if dst_type is None:\n        dst_type = torch.int8\n\n    is_int4 = (dst_type == torch.quint4x2)\n    dst_scale = 7.0 if is_int4 else 127.0\n\n    x1, x2 = torch.chunk(x, 2, dim=-1)\n    x1f = x1.float()\n    x2f = x2.float()\n    if activate_left:\n        y = torch.nn.functional.silu(x1f) * x2f\n    else:\n        y = x1f * torch.nn.functional.silu(x2f)\n\n    y_last_dim = y.shape[-1]\n    batch_dim = x.shape[0]\n\n    if group_index is not None:\n        begin_index = 0\n        for i in range(group_index.shape[0]):\n            end_index = group_index[i].item() if group_list_type == 0 else begin_index + group_index[i].item()\n            end_index = min(end_index, batch_dim)\n            if end_index <= begin_index:\n                begin_index = end_index\n                continue\n            y_slice = y[begin_index:end_index]\n            scale_slice = smooth_scales[i].float()\n            if offsets is not None and quant_mode == 0:\n                offset_slice = offsets[i].float()\n            else:\n                offset_slice = None\n\n            if scale_slice.shape[-1] == y_last_dim:\n                y[begin_index:end_index] = y_slice * scale_slice + (offset_slice if offset_slice is not None else 0)\n            elif scale_slice.shape[-1] == batch_dim:\n                token_scale = scale_slice[begin_index:end_index].unsqueeze(-1)\n                if offset_slice is not None:\n                    token_offset = offset_slice[begin_index:end_index].unsqueeze(-1)\n                else:\n                    token_offset = 0\n                y[begin_index:end_index] = y_slice * token_scale + token_offset\n            else:\n                y[begin_index:end_index] = y_slice * scale_slice + (offset_slice if offset_slice is not None else 0)\n\n            begin_index = end_index\n    else:\n        if smooth_scales is not None:\n            if smooth_scales.shape[-1] == y_last_dim:\n                y = y * smooth_scales.float()\n            elif smooth_scales.shape[-1] == batch_dim:\n                y = y * smooth_scales.float().unsqueeze(-1)\n        if offsets is not None and quant_mode == 0:\n            if offsets.shape[-1] == y_last_dim:\n                y = y + offsets.float()\n            elif offsets.shape[-1] == batch_dim:\n                y = y + offsets.float().unsqueeze(-1)\n\n    scale = None\n    if quant_mode == 1:\n        scale = dst_scale / torch.max(torch.abs(y), dim=1)[0]\n        y = y * scale.unsqueeze(1)\n\n    y = torch.round(y)\n    y = torch.clamp(y, -1 - dst_scale, dst_scale)\n\n    if is_int4:\n        y_reshaped = y.reshape(*y.shape[:-1], -1, 2)\n        low = (y_reshaped[..., 0].to(torch.int32) & 0xF).to(torch.uint8)\n        high = (y_reshaped[..., 1].to(torch.int32) & 0xF).to(torch.uint8)\n        y = ((high << 4) | low).to(torch.int8)\n    else:\n        y = y.to(torch.int8)\n\n    if scale is None:\n        scale = torch.zeros(x.shape[0], dtype=torch.float32, device=x.device)\n\n    return y, scale\n"
+}

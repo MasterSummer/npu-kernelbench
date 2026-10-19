@@ -1,0 +1,55 @@
+{
+  "name": "AdamW",
+  "axes": {},
+  "inputs": {
+    "var": {
+      "description": "Variable tensor to update. Supports float32, float16, bfloat16."
+    },
+    "m": {
+      "description": "First moment estimates, same shape as var, dtype float32."
+    },
+    "v": {
+      "description": "Second moment estimates, same shape as var, dtype float32."
+    },
+    "grad": {
+      "description": "Gradient tensor, same shape and dtype as var."
+    },
+    "beta1_power": {
+      "description": "float, beta1 power for bias correction."
+    },
+    "beta2_power": {
+      "description": "float, beta2 power for bias correction."
+    },
+    "lr": {
+      "description": "float, learning rate."
+    },
+    "beta1": {
+      "description": "float, exponential decay rate for first moment."
+    },
+    "beta2": {
+      "description": "float, exponential decay rate for second moment."
+    },
+    "epsilon": {
+      "description": "float, small constant for numerical stability."
+    },
+    "use_locking": {
+      "description": "bool, whether to use locking."
+    },
+    "use_nesterov": {
+      "description": "bool, whether to use Nesterov momentum."
+    }
+  },
+  "outputs": {
+    "var_out": {
+      "description": "Updated variable tensor, same shape and dtype as var."
+    },
+    "m_out": {
+      "description": "Updated first moment, same shape and dtype as m."
+    },
+    "v_out": {
+      "description": "Updated second moment, same shape and dtype as v."
+    }
+  },
+  "reference": "import torch\nimport torch_npu\n\ndef run(var, m, v, grad, beta1_power, beta2_power, lr, beta1, beta2, epsilon, use_locking=False, use_nesterov=False):\n    if var.dtype == torch.float16:\n        orig_dtype = var.dtype\n        var_f32 = var.float()\n        m_f32 = torch.zeros_like(m, dtype=torch.float32)\n        v_f32 = torch.zeros_like(v, dtype=torch.float32)\n        grad_f32 = grad.float()\n        m_new = beta1 * m_f32 + (1 - beta1) * grad_f32\n        v_new = beta2 * v_f32 + (1 - beta2) * grad_f32 * grad_f32\n        m_hat = m_new / (1 - beta1_power)\n        v_hat = v_new / (1 - beta2_power)\n        if use_nesterov:\n            m_nesterov = beta1 * m_hat + (1 - beta1) * grad_f32 / (1 - beta1_power)\n            var_new = var_f32 - lr * m_nesterov / (torch.sqrt(v_hat) + epsilon)\n        else:\n            var_new = var_f32 - lr * m_hat / (torch.sqrt(v_hat) + epsilon)\n        return var_new.to(orig_dtype), m_new.to(m.dtype), v_new.to(v.dtype)\n    var_out = var.clone()\n    m_out = torch.zeros_like(m)\n    v_out = torch.zeros_like(v)\n    torch_npu.npu_apply_adam(beta1_power, beta2_power, lr, beta1, beta2, epsilon,\n                              grad, use_locking, use_nesterov, out=(var_out, m_out, v_out))\n    return var_out, m_out, v_out\n",
+  "description": "Model that performs AdamW optimization step using NPU accelerated Adam.\nPyTorch native implementation:\ndef forward(self, var: torch.Tensor, m: torch.Tensor, v: torch.Tensor,\n            grad: torch.Tensor, beta1_power: float, beta2_power: float,\n            lr: float, beta1: float, beta2: float, epsilon: float,\n            use_locking: bool = False, use_nesterov: bool = False):\n    orig_dtype = var.dtype\n\n    var_f32 = var.float()\n    m_f32 = m.float()\n    v_f32 = v.float()\n    grad_f32 = grad.float()\n\n    m_new = beta1 * m_f32 + (1 - beta1) * grad_f32\n    v_new = beta2 * v_f32 + (1 - beta2) * grad_f32 * grad_f32\n\n    m_hat = m_new / (1 - beta1_power)\n    v_hat = v_new / (1 - beta2_power)\n\n    if use_nesterov:\n        m_nesterov = beta1 * m_hat + (1 - beta1) * grad_f32 / (1 - beta1_power)\n        var_new = var_f32 - lr * m_nesterov / (torch.sqrt(v_hat) + epsilon)\n    else:\n        var_new = var_f32 - lr * m_hat / (torch.sqrt(v_hat) + epsilon)\n\n    var_out = var_new.to(orig_dtype)\n    m_out = m_new.to(m.dtype)\n    v_out = v_new.to(v.dtype)\n\n    return var_out, m_out, v_out"
+}

@@ -1,0 +1,38 @@
+{
+  "name": "MoeFinalizeRouting",
+  "op_type": "routing",
+  "axes": {},
+  "inputs": {
+    "expanded_permuted_rows": {
+      "description": "shape varies; supports float16"
+    },
+    "skip1": {
+      "description": "shape varies; supports float16; optional, may be None"
+    },
+    "skip2": {
+      "description": "shape varies; supports float16; optional, may be None"
+    },
+    "bias": {
+      "description": "shape varies; supports float16; optional, may be None"
+    },
+    "scales": {
+      "description": "shape varies; supports float16"
+    },
+    "expanded_src_to_dst_row": {
+      "description": "shape varies; supports int32"
+    },
+    "export_for_source_row": {
+      "description": "shape varies; supports int32"
+    },
+    "drop_pad_mode": {
+      "description": "int, default=0; optional"
+    }
+  },
+  "outputs": {
+    "y": {
+      "description": "Finalized routing output, same shape as expanded_permuted_rows"
+    }
+  },
+  "reference": "import torch\n\ndef run(expanded_permuted_rows, skip1, skip2, bias, scales, expanded_src_to_dst_row, export_for_source_row, drop_pad_mode=0):\n    if drop_pad_mode == 0:\n        output_dim = expanded_permuted_rows.shape[0]\n    else:\n        output_dim = export_for_source_row.shape[0]\n    hidden = expanded_permuted_rows.shape[-1]\n    epr_2d = expanded_permuted_rows.reshape(-1, hidden)\n    esdr_1d = expanded_src_to_dst_row.reshape(-1).long()\n    n = min(epr_2d.shape[0], esdr_1d.shape[0])\n    output = torch.zeros(output_dim, hidden, dtype=expanded_permuted_rows.dtype, device=expanded_permuted_rows.device)\n    output.index_add_(0, esdr_1d[:n], epr_2d[:n])\n    if bias is not None:\n        mask = (export_for_source_row >= 0)\n        clamped_idx = export_for_source_row.clamp(min=0).long()\n        bias_lookup = bias[clamped_idx]\n        weighted = scales.unsqueeze(-1) * bias_lookup\n        weighted = weighted * mask.unsqueeze(-1).to(weighted.dtype)\n        output[:export_for_source_row.shape[0]] += weighted.sum(dim=1)\n    if skip1 is not None:\n        output[:skip1.shape[0]] += skip1\n    if skip2 is not None:\n        output[:skip2.shape[0]] += skip2\n    return output[:export_for_source_row.shape[0]]\n",
+  "description": "Pure PyTorch high-precision (fp32) implementation of MoE finalize routing.\n\nReplaces torch_npu.npu_moe_finalize_routing with pure torch ops using fp32\narithmetic to avoid precision loss from fp16 accumulation.\n\nOperator semantics:\n    expanded_permuted_rows: (NUM_ROWS*K, H) for non-drop, or (E, C, H) for drop mode\n    scales: (NUM_ROWS, K) expert weights\n    expanded_src_to_dst_row: (NUM_ROWS*K) index mapping\n    export_for_source_row: (NUM_ROWS, K) expert assignments per row"
+}

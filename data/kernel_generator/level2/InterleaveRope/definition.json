@@ -1,0 +1,23 @@
+{
+  "name": "InterleaveRope",
+  "op_type": "norm",
+  "axes": {},
+  "inputs": {
+    "x": {
+      "description": "shape varies; supports float16"
+    },
+    "cos": {
+      "description": "shape varies; supports float16"
+    },
+    "sin": {
+      "description": "shape varies; supports float16"
+    }
+  },
+  "outputs": {
+    "y": {
+      "description": "Output with interleave RoPE applied, same shape and dtype as input"
+    }
+  },
+  "reference": "import torch\nimport torch_npu\n\ndef run(x, cos, sin):\n    return torch_npu.npu_interleave_rope(x, cos, sin)\n",
+  "description": "Simple model that performs interleave RoPE (Rotary Position Embedding).\ntorch_npu.npu_interleave_rope(x, cos, sin) -> Tensor\nPyTorch native implementation of forward function\ndef forward(self, x: torch.Tensor, cos: torch.Tensor, sin: torch.Tensor) -> torch.Tensor:\n    orig_dtype = x.dtype\n\n    x_f32 = x.float()\n    cos_f32 = cos.float()\n    sin_f32 = sin.float()\n\n    B, N, S, D = x_f32.shape\n\n    x_reshaped = x_f32.reshape(B, N, S, D // 2, 2)\n    x_transposed = x_reshaped.transpose(-1, -2)\n    x_interleaved = x_transposed.reshape(B, N, S, D)\n\n    cos_expanded = cos_f32\n    sin_expanded = sin_f32\n\n    if cos_expanded.shape[2] == 1 and S > 1:\n        cos_expanded = cos_expanded.expand(B, N, S, D)\n    if sin_expanded.shape[2] == 1 and S > 1:\n        sin_expanded = sin_expanded.expand(B, N, S, D)\n\n    x_rotated = torch.zeros_like(x_interleaved)\n    x_rotated[..., :D // 2] = -x_interleaved[..., D // 2:]\n    x_rotated[..., D // 2:] = x_interleaved[..., :D // 2]\n\n    output_f32 = x_interleaved * cos_expanded + x_rotated * sin_expanded\n\n    return output_f32.to(orig_dtype)"
+}

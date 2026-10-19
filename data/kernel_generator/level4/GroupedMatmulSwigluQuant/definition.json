@@ -1,0 +1,32 @@
+{
+  "name": "GroupedMatmulSwigluQuant",
+  "op_type": "matmul",
+  "axes": {},
+  "inputs": {
+    "x": {
+      "description": "input matrix (m, k), dtype int8"
+    },
+    "weight": {
+      "description": "weight list for grouped matmul, each element (k, n), dtype int8"
+    },
+    "weight_scale": {
+      "description": "per-channel weight dequantization scale, dtype float32"
+    },
+    "x_scale": {
+      "description": "per-token input dequantization scale, dtype float32"
+    },
+    "group_list": {
+      "description": "int64 tensor of cumulative group boundaries for slicing x rows per expert; defaults to [x.shape[0]] when absent"
+    }
+  },
+  "outputs": {
+    "0": {
+      "description": "Quantized output int8"
+    },
+    "1": {
+      "description": "Dynamic quant scale"
+    }
+  },
+  "reference": "import torch\n\ndef run(x: torch.Tensor, weight: torch.Tensor, weight_scale: torch.Tensor, x_scale: torch.Tensor, group_list: torch.Tensor):\n    if group_list is None:\n        num_groups = weight.shape[0]\n        rows_per_group = x.shape[0] // num_groups\n        group_list = torch.tensor([rows_per_group * (i + 1) for i in range(num_groups)], dtype=torch.int64, device=x.device)\n\n    m = x.shape[0]\n    outputs = []\n    start = 0\n    prev = 0\n\n    for i, curr in enumerate(group_list.tolist()):\n        count = curr - prev\n        prev = curr\n        if count > 0:\n            x_group = x[start:start + count]\n            w_group = weight[i]\n            ws_group = weight_scale[i]\n            xs_group = x_scale[start:start + count]\n\n            c = torch.matmul(x_group.to(torch.float32), w_group.to(torch.float32))\n            c = c * ws_group * xs_group.reshape(-1, 1)\n\n            gate, up = c.chunk(2, dim=-1)\n            swiglu_out = gate * torch.sigmoid(gate) * up\n\n            max_abs = torch.max(torch.abs(swiglu_out), dim=-1, keepdim=True).values\n            quant_scale = 127.0 / max_abs\n            q_out = torch.round(swiglu_out * quant_scale).clamp(-128, 127).to(torch.int8)\n            dequant_scale = (1.0 / quant_scale).squeeze(-1)\n\n            outputs.append((q_out, dequant_scale))\n        start += count\n\n    if outputs:\n        output = torch.cat([o[0] for o in outputs], dim=0)\n        output_scale = torch.cat([o[1] for o in outputs], dim=0)\n    else:\n        n = weight.shape[2] // 2\n        output = torch.empty(m, n, dtype=torch.int8, device=x.device)\n        output_scale = torch.empty(m, dtype=torch.float32, device=x.device)\n\n    return output, output_scale\n",
+  "description": "Model that performs Grouped Matmul + SwiGLU + Quant computation using NPU ops.\nUses npu_grouped_matmul for grouped matmul, npu_swiglu for activation,\nand npu_dynamic_quant for quantization.\n\nPyTorch native implementation (aligned with atk reference & aclnnSwigluGatedMlp):\ndef _gmm_swiglu_quant(x, weight, weight_scale, x_scale, m):\n    # Step 1: int32 matmul to avoid int8 overflow\n    c_temp1 = torch.matmul(x.to(torch.int32), weight.to(torch.int32))\n    c_temp1 = c_temp1.to(torch.float32)\n    # Step 2: apply per-channel (weight) and per-token (x) scales\n    c_temp2 = c_temp1 * weight_scale                    # [t, n]\n    c_temp3 = c_temp2 * x_scale.reshape(m, 1)           # [t, n]\n    # Step 3: SwiGLU activation — silu(gate) * up (Ascend standard)\n    gate, up = c_temp3.chunk(2, dim=-1)\n    swiglu_out = gate * torch.sigmoid(gate) * up        # = silu(gate) * up\n    # Step 4: dynamic quantize to int8 (per-token)\n    max_abs = torch.max(torch.abs(swiglu_out), dim=-1, keepdim=True).values\n    quant_scale = 127.0 / max_abs\n    q_out = torch.round(swiglu_out * quant_scale).clamp(-128, 127).to(torch.int8)\n    dequant_scale = (1.0 / quant_scale).squeeze(-1)\n    return q_out, dequant_scale\n\ndef process_groups(x, weight_list, weight_scale_list, x_scale, group_list):\n    m = x.shape[0]\n    outputs = []\n    start = 0\n    prev = 0\n    for i, curr in enumerate(group_list.tolist()):\n        count = curr - prev\n        prev = curr\n        if count > 0:\n            q_out, q_scale = _gmm_swiglu_quant(\n                x[start:start + count],\n                weight_list[i],\n                weight_scale_list[i],\n                x_scale[start:start + count],\n                count\n            )\n            outputs.append((q_out, q_scale))\n        start += count\n    if outputs:\n        output = torch.cat([o[0] for o in outputs], dim=0)\n        output_scale = torch.cat([o[1] for o in outputs], dim=0)\n    else:\n        n = weight_list[0].shape[1]\n        output = torch.empty(m, n // 2, dtype=torch.int8)\n        output_scale = torch.empty(m, dtype=torch.float32)\n    return output, output_scale"
+}

@@ -1,0 +1,38 @@
+{
+  "name": "QuantMatmul",
+  "op_type": "matmul",
+  "axes": {},
+  "inputs": {
+    "x1": {
+      "description": "left matrix, shape 2-6D, dtype int8"
+    },
+    "x2": {
+      "description": "right matrix, shape 2-6D, dtype int8"
+    },
+    "scale": {
+      "description": "quantization scale factor, dtype float32/bfloat16"
+    },
+    "offset": {
+      "description": "optional quantization offset, dtype float32"
+    },
+    "pertoken_scale": {
+      "description": "optional per-token scale, shape [m], dtype float32"
+    },
+    "bias": {
+      "description": "optional bias term, shape [n] or [batch, 1, n], dtype bfloat16/float32/int32"
+    },
+    "output_dtype": {
+      "description": "str, output data type selector (float16/bfloat16/int32/int8); default=None"
+    },
+    "group_sizes": {
+      "description": "optional list of int, group quantization granularity"
+    }
+  },
+  "outputs": {
+    "y": {
+      "description": "Quantized matmul output"
+    }
+  },
+  "reference": "import torch\nimport torch.nn as nn\n\ndef run(x1, x2, scale, offset=None, pertoken_scale=None, bias=None, output_dtype=None, group_sizes=None):\n    import torch_npu\n    _dtype_map = {'float16': torch.float16, 'bfloat16': torch.bfloat16, 'int32': torch.int32, 'int8': torch.int8}\n    if isinstance(output_dtype, str):\n        output_dtype = _dtype_map.get(output_dtype, output_dtype)\n    return torch_npu.npu_quant_matmul(x1, x2, scale, offset=offset, pertoken_scale=pertoken_scale, bias=bias, output_dtype=output_dtype, group_sizes=group_sizes)\n",
+  "description": "Model that performs quantized matrix multiplication using NPU accelerated npu_quant_matmul.\nSupports int8 quantized matmul with various output data types.\n\ntorch_npu.npu_quant_matmul(x1, x2, scale, *, offset=None, pertoken_scale=None,\n                           bias=None, output_dtype=None, group_sizes=None) -> Tensor\n\nPyTorch native reference implementation (for correctness analysis only):\nimport torch\n\ndef _crop_float32_to_19bit(scale):\n    scale_f32 = scale.to(torch.float32).contiguous()\n    bits = scale_f32.view(torch.int32)\n    mask = ~((1 << 4) - 1)\n    bits = bits & mask\n    return bits.view(torch.float32).to(scale.dtype)\n\n_DTYPE_MAP = {\"bfloat16\": torch.bfloat16, \"float16\": torch.float16, \"float32\": torch.float32, \"int32\": torch.int32, \"int8\": torch.int8}\n\ndef run(x1, x2, scale, offset=None, pertoken_scale=None, bias=None, output_dtype=None, group_sizes=None):\n    if isinstance(output_dtype, str):\n        output_dtype = _DTYPE_MAP.get(output_dtype, getattr(torch, output_dtype, None))\n    x1_fp = x1.to(torch.float32)\n    x2_fp = x2.to(torch.float32)\n    matmul_result = torch.matmul(x1_fp, x2_fp)\n\n    if (scale.dtype == torch.float32 and pertoken_scale is None and\n            output_dtype not in (torch.bfloat16, torch.int32)):\n        scale_fp = _crop_float32_to_19bit(scale)\n    else:\n        scale_fp = scale.to(torch.float32)\n\n    if bias is not None and bias.dtype == torch.int32:\n        matmul_result = matmul_result + bias.to(torch.float32)\n\n    if pertoken_scale is not None:\n        pertoken_scale_fp = pertoken_scale.to(torch.float32)\n        if pertoken_scale_fp.dim() == 1:\n            pertoken_scale_fp = pertoken_scale_fp.view(-1, 1)\n        matmul_result_fp = matmul_result * pertoken_scale_fp * scale_fp\n    else:\n        matmul_result_fp = matmul_result * scale_fp\n\n    if bias is not None and bias.dtype != torch.int32:\n        matmul_result_fp = matmul_result_fp + bias.to(torch.float32)\n\n    if offset is not None:\n        matmul_result_fp = matmul_result_fp + offset.to(torch.float32)\n\n    if output_dtype is not None:\n        matmul_result_fp = matmul_result_fp.to(output_dtype)\n\n    if output_dtype is not None and torch.is_floating_point(matmul_result_fp):\n        info = torch.finfo(output_dtype)\n        matmul_result_fp = torch.clamp(matmul_result_fp, info.min, info.max)\n\n    return matmul_result_fp\n"
+}

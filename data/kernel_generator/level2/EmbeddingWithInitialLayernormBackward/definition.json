@@ -1,0 +1,32 @@
+{
+  "name": "EmbeddingWithInitialLayernormBackward",
+  "op_type": "norm",
+  "axes": {},
+  "inputs": {
+    "grad_output": {
+      "description": "shape varies; supports bfloat16"
+    },
+    "input_ids": {
+      "description": "shape varies; supports int64"
+    },
+    "hidden_states_fp32": {
+      "description": "shape varies; supports float32"
+    },
+    "rstd": {
+      "description": "shape varies; supports float32"
+    },
+    "norm_weight": {
+      "description": "shape varies; supports float32"
+    }
+  },
+  "outputs": {
+    "0": {
+      "description": "Gradient w.r.t. embedding weight, bfloat16"
+    },
+    "1": {
+      "description": "Gradient w.r.t. norm weight, bfloat16"
+    }
+  },
+  "reference": "import torch\n\ndef run(grad_output, input_ids, hidden_states_fp32, rstd, norm_weight):\n    hidden_size = grad_output.shape[-1]\n    grad_norm = grad_output.to(torch.float32) * norm_weight.to(torch.float32) / rstd.to(torch.float32)\n    grad_norm_weight = (grad_output.to(torch.float32) * hidden_states_fp32).sum(dim=(0, 1))\n    grad_embed_weight = torch.zeros(hidden_size, dtype=torch.bfloat16, device=grad_output.device)\n    for i in range(input_ids.shape[0]):\n        for j in range(input_ids.shape[1]):\n            idx = input_ids[i, j].item()\n            grad_embed_weight[idx] += grad_norm[i, j].sum()\n    return grad_embed_weight.to(torch.bfloat16), grad_norm_weight.to(torch.bfloat16)\n",
+  "description": "Fused backward for embedding + initial LayerNorm. Computes gradients for both embedding weight and norm weight in bfloat16. Pure PyTorch: separate embedding backward + layernorm backward."
+}

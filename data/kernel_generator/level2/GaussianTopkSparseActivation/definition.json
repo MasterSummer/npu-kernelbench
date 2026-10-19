@@ -1,0 +1,20 @@
+{
+  "name": "GaussianTopkSparseActivation",
+  "op_type": "elementwise",
+  "axes": {},
+  "inputs": {
+    "inputs": {
+      "description": "shape varies; supports float32"
+    },
+    "target_sparsity": {
+      "description": "float, default=0.5"
+    }
+  },
+  "outputs": {
+    "y": {
+      "description": "Sparse activation output, bfloat16"
+    }
+  },
+  "reference": "import torch\nimport math\n\na1 = -3.969683028665376e+01\na2 = 2.209460984245205e+02\na3 = -2.759285104469687e+02\na4 = 1.383577518672690e+02\na5 = -3.066479806614716e+01\na6 = 2.506628277459239e+00\nb1 = -5.447609879822406e+01\nb2 = 1.615858368580409e+02\nb3 = -1.556989798598866e+02\nb4 = 6.680131188771972e+01\nb5 = -1.328068155288572e+01\nc1 = -7.784894002430293e-03\nc2 = -3.223964580411365e-01\nc3 = -2.400758277161838e+00\nc4 = -2.549732539343734e+00\nc5 = 4.374664141464968e+00\nc6 = 2.938163982698783e+00\nd1 = 7.784695709041462e-03\nd2 = 3.224671290700398e-01\nd3 = 2.445134137142996e+00\nd4 = 3.754408661907416e+00\n\ndef _ndtri(p):\n    p_low = 0.02425\n    p_high = 1.0 - p_low\n    result = torch.zeros_like(p)\n    mask_low = p < p_low\n    if mask_low.any():\n        q = torch.sqrt(-2.0 * torch.log(p[mask_low]))\n        result[mask_low] = (((((c1*q + c2)*q + c3)*q + c4)*q + c5)*q + c6) / ((((d1*q + d2)*q + d3)*q + d4)*q + 1.0)\n    mask_mid = (p >= p_low) & (p <= p_high)\n    if mask_mid.any():\n        q = p[mask_mid] - 0.5\n        r = q * q\n        result[mask_mid] = (((((a1*r + a2)*r + a3)*r + a4)*r + a5)*r + a6)*q / (((((b1*r + b2)*r + b3)*r + b4)*r + b5)*r + 1.0)\n    mask_high = p > p_high\n    if mask_high.any():\n        q = torch.sqrt(-2.0 * torch.log(1.0 - p[mask_high]))\n        result[mask_high] = -(((((c1*q + c2)*q + c3)*q + c4)*q + c5)*q + c6) / ((((d1*q + d2)*q + d3)*q + d4)*q + 1.0)\n    return result\n\ndef run(inputs, target_sparsity=0.5):\n    if target_sparsity == 0.0:\n        return inputs\n    input_f32 = inputs.to(torch.float32)\n    inputs_mean = torch.mean(input_f32, dim=-1, keepdim=True)\n    inputs_std = torch.std(input_f32, dim=-1, keepdim=True, unbiased=False)\n    threshold = inputs_mean + inputs_std * _ndtri(torch.tensor(target_sparsity, dtype=torch.float32, device=inputs.device))\n    output = torch.nn.functional.relu(input_f32 - threshold)\n    return output.to(torch.bfloat16)\n",
+  "description": "Gaussian-based top-k sparse activation. Computes adaptive sparsity threshold based on input statistics: mean + std * norm.icdf(target_sparsity), then applies ReLU(input - threshold). Uses Abramowitz and Stegun approximation for inverse normal CDF."
+}

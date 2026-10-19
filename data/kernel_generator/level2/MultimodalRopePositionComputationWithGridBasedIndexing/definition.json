@@ -1,0 +1,39 @@
+{
+  "name": "MultimodalRopePositionComputationWithGridBasedIndexing",
+  "op_type": "norm",
+  "axes": {},
+  "inputs": {
+    "grid_thw": {
+      "description": "shape varies; supports int64"
+    },
+    "pos_embed_weight": {
+      "description": "shape varies; supports float32"
+    },
+    "inv_freq": {
+      "description": "shape varies; supports float32"
+    },
+    "spatial_merge_size": {
+      "description": "int, default=2; optional"
+    },
+    "num_grid_per_side": {
+      "description": "int, default=35; optional"
+    },
+    "mrope_section": {
+      "description": "list; optional"
+    }
+  },
+  "outputs": {
+    "0": {
+      "description": "Patch position embeddings"
+    },
+    "1": {
+      "description": "Cosine embeddings"
+    },
+    "2": {
+      "description": "Sine embeddings"
+    }
+  },
+  "reference": "import torch\n\ndef run(grid_thw, pos_embed_weight, inv_freq, spatial_merge_size=2, num_grid_per_side=35, mrope_section=None):\n    if mrope_section is None:\n        mrope_section = [24, 20, 20]\n    dev = grid_thw.device\n    t, h, w = grid_thw[0].tolist()\n    h = h // spatial_merge_size\n    w = w // spatial_merge_size\n    pos_ids_t = torch.arange(t, device=dev)\n    pos_ids_h = torch.arange(h, device=dev)\n    pos_ids_w = torch.arange(w, device=dev)\n    pos_ids = torch.stack([pos_ids_t.repeat(h * w), pos_ids_h.repeat_interleave(w).repeat(t), pos_ids_w.repeat_interleave(h * w).repeat(t)], dim=1)\n    freqs = torch.outer(pos_ids.float().flatten(), inv_freq.float())\n    emb = torch.cat((freqs, freqs), dim=-1)\n    cos_embeddings = emb.cos().reshape(-1, len(mrope_section), emb.shape[-1] // len(mrope_section))\n    sin_embeddings = emb.sin().reshape(-1, len(mrope_section), emb.shape[-1] // len(mrope_section))\n    patch_pos_embeds = pos_embed_weight[pos_ids.flatten()]\n    return patch_pos_embeds, cos_embeddings, sin_embeddings\n\n\ndef gen_inputs(axes, device):\n    import math\n    T = axes['T']; SMS = axes['SMS']; D = axes['D']; MR = axes['MR']; DT = axes['DT']\n    NGPS = 35\n    L = D // 8\n    two_L = 2 * L\n    denom = 3 * (two_L // 3)\n    need = denom // math.gcd(3 * two_L, denom)\n    grid_thw = torch.zeros((T, 3), dtype=torch.int64, device=device)\n    grid_thw[0] = torch.tensor([need, SMS, SMS], dtype=torch.int64, device=device)\n    dt_map = {0: torch.float32, 1: torch.float16, 2: torch.bfloat16}\n    pos_embed_weight = torch.randn(NGPS * NGPS, D, dtype=dt_map[DT], device=device)\n    inv_freq = torch.randn(L, dtype=torch.float32, device=device)\n    mr_map = {0: [24, 20, 20], 1: [32, 28, 28], 2: [20, 16, 16], 3: [16, 12, 12]}\n    return {\n        'grid_thw': grid_thw,\n        'pos_embed_weight': pos_embed_weight,\n        'inv_freq': inv_freq,\n        'spatial_merge_size': SMS,\n        'num_grid_per_side': NGPS,\n        'mrope_section': mr_map[MR],\n    }\n",
+  "description": "Multimodal RoPE position computation with grid-based indexing (Qwen2-VL style). Computes 3D rotary position embeddings using grid_thw and mrope_section. Returns (patch_pos_embeds, cos, sin).",
+  "custom_inputs_entrypoint": "gen_inputs"
+}

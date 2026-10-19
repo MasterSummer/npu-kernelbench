@@ -1,0 +1,50 @@
+{"uuid": "GELU-001", "axes": null, "inputs": {"x": {"type": "random", "shape": [1248, 2480], "dtype": "float32"}, "approximate": {"type": "scalar", "value": "none"}}}
+{"uuid": "GELU-002", "axes": null, "inputs": {"x": {"type": "random", "shape": [1376, 2768], "dtype": "float32"}, "approximate": {"type": "scalar", "value": "tanh"}}}
+{"uuid": "GELU-003", "axes": null, "inputs": {"x": {"type": "random", "shape": [2720, 5456], "dtype": "float32"}, "approximate": {"type": "scalar", "value": "tanh"}}}
+{"uuid": "GELU-004", "axes": null, "inputs": {"x": {"type": "random", "shape": [2320, 10432], "dtype": "float32"}, "approximate": {"type": "scalar", "value": "none"}}}
+{"uuid": "GELU-005", "axes": null, "inputs": {"x": {"type": "random", "shape": [3536, 7072], "dtype": "float32"}, "approximate": {"type": "scalar", "value": "none"}}}
+{"uuid": "GELU-006", "axes": null, "inputs": {"x": {"type": "random", "shape": [1, 169, 314, 416], "dtype": "float16"}, "approximate": {"type": "scalar", "value": "none"}}}
+{"uuid": "GELU-007", "axes": null, "inputs": {"x": {"type": "random", "shape": [1, 5232, 72, 72], "dtype": "bfloat16"}, "approximate": {"type": "scalar", "value": "tanh"}}}
+{"uuid": "GELU-008", "axes": null, "inputs": {"x": {"type": "random", "shape": [1, 39, 864, 864], "dtype": "bfloat16"}, "approximate": {"type": "scalar", "value": "tanh"}}}
+{"uuid": "GELU-009", "axes": null, "inputs": {"x": {"type": "random", "shape": [11, 176, 144, 144], "dtype": "float16"}, "approximate": {"type": "scalar", "value": "none"}}}
+{"uuid": "GELU-010", "axes": null, "inputs": {"x": {"type": "random", "shape": [1, 992, 208, 208], "dtype": "float16"}, "approximate": {"type": "scalar", "value": "tanh"}}}
+{"uuid": "GELU-011", "axes": null, "inputs": {"x": {"type": "random", "shape": [832, 416, 208], "dtype": "bfloat16"}, "approximate": {"type": "scalar", "value": "tanh"}}}
+{"uuid": "GELU-012", "axes": null, "inputs": {"x": {"type": "random", "shape": [1, 2608, 143, 143], "dtype": "bfloat16"}, "approximate": {"type": "scalar", "value": "none"}}}
+{"uuid": "GELU-013", "axes": null, "inputs": {"x": {"type": "random", "shape": [7, 128, 208, 288], "dtype": "bfloat16"}, "approximate": {"type": "scalar", "value": "none"}}}
+{"uuid": "GELU-014", "axes": null, "inputs": {"x": {"type": "random", "shape": [45, 76, 106, 167], "dtype": "float16"}, "approximate": {"type": "scalar", "value": "tanh"}}}
+{"uuid": "GELU-015", "axes": null, "inputs": {"x": {"type": "random", "shape": [3536, 23888], "dtype": "float32"}, "approximate": {"type": "scalar", "value": "tanh"}}}
+{"uuid": "GELU-016", "axes": null, "inputs": {"x": {"type": "random", "shape": [1, 192, 784, 784], "dtype": "float32"}, "approximate": {"type": "scalar", "value": "none"}}}
+{"uuid": "GELU-017", "axes": null, "inputs": {"x": {"type": "random", "shape": [288, 480, 752], "dtype": "float32"}, "approximate": {"type": "scalar", "value": "none"}}}
+{"uuid": "GELU-018", "axes": null, "inputs": {"x": {"type": "random", "shape": [1200, 608, 304], "dtype": "bfloat16"}, "approximate": {"type": "scalar", "value": "none"}}}
+{"uuid": "GELU-019", "axes": null, "inputs": {"x": {"type": "random", "shape": [608, 608, 608], "dtype": "float16"}, "approximate": {"type": "scalar", "value": "tanh"}}}
+{"uuid": "GELU-020", "axes": null, "inputs": {"x": {"type": "random", "shape": [256, 560, 864], "dtype": "float32"}, "approximate": {"type": "scalar", "value": "tanh"}}}
+{"uuid": "GELU-021", "axes": null, "inputs": {"x": {"type": "random", "shape": [112, 112, 112, 112], "dtype": "float32"}, "approximate": {"type": "scalar", "value": "tanh"}}}
+{"uuid": "GELU-022", "axes": null, "inputs": {"x": {"type": "random", "shape": [20992, 20992], "dtype": "float16"}, "approximate": {"type": "scalar", "value": "tanh"}}}
+{"uuid": "GELU-023", "axes": null, "inputs": {"x": {"type": "random", "shape": [5328, 83056], "dtype": "float16"}, "approximate": {"type": "scalar", "value": "none"}}}
+{"uuid": "GELU-024", "axes": null, "inputs": {"x": {"type": "random", "shape": [21200, 21200], "dtype": "bfloat16"}, "approximate": {"type": "scalar", "value": "tanh"}}}
+{"uuid": "GELU-025", "axes": null, "inputs": {"x": {"type": "random", "shape": [624, 624, 624], "dtype": "float16"}, "approximate": {"type": "scalar", "value": "tanh"}}}
+{"uuid": "GELU-026", "axes": null, "inputs": {"x": {"type": "random", "shape": [624, 624, 624], "dtype": "float16"}, "approximate": {"type": "scalar", "value": "none"}}}
+{"uuid": "GELU-027", "axes": null, "inputs": {"x": {"type": "random", "shape": [21648, 21648], "dtype": "bfloat16"}, "approximate": {"type": "scalar", "value": "none"}}}
+{"uuid": "GELU-028", "axes": null, "inputs": {"x": {"type": "random", "shape": [5184, 91936], "dtype": "float16"}, "approximate": {"type": "scalar", "value": "tanh"}}}
+{"uuid": "GELU-029", "axes": null, "inputs": {"x": {"type": "random", "shape": [21920, 21920], "dtype": "float16"}, "approximate": {"type": "scalar", "value": "tanh"}}}
+{"uuid": "GELU-030", "axes": null, "inputs": {"x": {"type": "random", "shape": [1720, 280176], "dtype": "bfloat16"}, "approximate": {"type": "scalar", "value": "none"}}}
+{"uuid": "GELU-031", "axes": null, "inputs": {"x": {"type": "random", "shape": [21968, 21968], "dtype": "float16"}, "approximate": {"type": "scalar", "value": "none"}}}
+{"uuid": "GELU-032", "axes": null, "inputs": {"x": {"type": "random", "shape": [22416, 22416], "dtype": "float16"}, "approximate": {"type": "scalar", "value": "none"}}}
+{"uuid": "GELU-033", "axes": null, "inputs": {"x": {"type": "random", "shape": [9280, 55664], "dtype": "bfloat16"}, "approximate": {"type": "scalar", "value": "tanh"}}}
+{"uuid": "GELU-034", "axes": null, "inputs": {"x": {"type": "random", "shape": [16256, 32528], "dtype": "float16"}, "approximate": {"type": "scalar", "value": "none"}}}
+{"uuid": "GELU-035", "axes": null, "inputs": {"x": {"type": "random", "shape": [3264, 163440], "dtype": "float16"}, "approximate": {"type": "scalar", "value": "tanh"}}}
+{"uuid": "GELU-036", "axes": null, "inputs": {"x": {"type": "random", "shape": [5168, 103568], "dtype": "float16"}, "approximate": {"type": "scalar", "value": "none"}}}
+{"uuid": "GELU-037", "axes": null, "inputs": {"x": {"type": "random", "shape": [8, 256, 224, 224], "dtype": "float32"}, "approximate": {"type": "scalar", "value": "tanh"}}}
+{"uuid": "GELU-038", "axes": null, "inputs": {"x": {"type": "random", "shape": [1, 96, 928, 928], "dtype": "float32"}, "approximate": {"type": "scalar", "value": "none"}}}
+{"uuid": "GELU-039", "axes": null, "inputs": {"x": {"type": "random", "shape": [1, 176, 896, 896], "dtype": "float32"}, "approximate": {"type": "scalar", "value": "tanh"}}}
+{"uuid": "GELU-040", "axes": null, "inputs": {"x": {"type": "random", "shape": [1, 36, 2688, 2688], "dtype": "float32"}, "approximate": {"type": "scalar", "value": "tanh"}}}
+{"uuid": "GELU-041", "axes": null, "inputs": {"x": {"type": "random", "shape": [127, 127, 127, 127], "dtype": "float32"}, "approximate": {"type": "scalar", "value": "none"}}}
+{"uuid": "GELU-042", "axes": null, "inputs": {"x": {"type": "random", "shape": [1, 704, 608, 608], "dtype": "float32"}, "approximate": {"type": "scalar", "value": "none"}}}
+{"uuid": "GELU-043", "axes": null, "inputs": {"x": {"type": "random", "shape": [110389440], "dtype": "float32"}, "approximate": {"type": "scalar", "value": "tanh"}}}
+{"uuid": "GELU-044", "axes": null, "inputs": {"x": {"type": "random", "shape": [110540128], "dtype": "float32"}, "approximate": {"type": "scalar", "value": "tanh"}}}
+{"uuid": "GELU-045", "axes": null, "inputs": {"x": {"type": "random", "shape": [112675856], "dtype": "float32"}, "approximate": {"type": "scalar", "value": "tanh"}}}
+{"uuid": "GELU-046", "axes": null, "inputs": {"x": {"type": "random", "shape": [113146288], "dtype": "float32"}, "approximate": {"type": "scalar", "value": "none"}}}
+{"uuid": "GELU-047", "axes": null, "inputs": {"x": {"type": "random", "shape": [113209488], "dtype": "float32"}, "approximate": {"type": "scalar", "value": "none"}}}
+{"uuid": "GELU-048", "axes": null, "inputs": {"x": {"type": "random", "shape": [113406832], "dtype": "float32"}, "approximate": {"type": "scalar", "value": "none"}}}
+{"uuid": "GELU-049", "axes": null, "inputs": {"x": {"type": "random", "shape": [114432096], "dtype": "float32"}, "approximate": {"type": "scalar", "value": "tanh"}}}
+{"uuid": "GELU-050", "axes": null, "inputs": {"x": {"type": "random", "shape": [115689248], "dtype": "float32"}, "approximate": {"type": "scalar", "value": "none"}}}

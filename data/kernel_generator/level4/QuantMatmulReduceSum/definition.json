@@ -1,0 +1,26 @@
+{
+  "name": "QuantMatmulReduceSum",
+  "op_type": "matmul",
+  "axes": {},
+  "inputs": {
+    "x1": {
+      "description": "left matrix (batch, m, k), dtype int8"
+    },
+    "x2": {
+      "description": "right matrix (batch, k, n), dtype int8"
+    },
+    "x1_scale": {
+      "description": "left matrix quantization scale (batch, m), dtype float32; default=None"
+    },
+    "x2_scale": {
+      "description": "right matrix quantization scale (n,), dtype bfloat16; default=None"
+    }
+  },
+  "outputs": {
+    "y": {
+      "description": "Quant matmul + reduce sum output, float32"
+    }
+  },
+  "reference": "import torch\nimport torch.nn as nn\n\ndef run(x1: torch.Tensor, x2: torch.Tensor, x1_scale=None, x2_scale=None):\n    \"\"\"\n        Performs quantized matmul reduce sum.\n\n        Args:\n            x1 (Tensor): Left matrix, shape [batch, m, k], dtype int8.\n            x2 (Tensor): Right matrix, shape [batch, k, n], dtype int8.\n            x1_scale (Tensor): Left matrix quantization scale, shape [batch, m], dtype float32.\n            x2_scale (Tensor): Right matrix quantization scale, shape [n], dtype bfloat16.\n\n        Returns:\n            Tensor: Sum of all group matmul results, shape [m, n], dtype float32.\n        \"\"\"\n    mid = torch.bmm(x1.float(), x2.float()) * x1_scale.unsqueeze(-1)\n    M, N = (mid.shape[1], mid.shape[2])\n    acc = torch.zeros(M, N, device=x1.device, dtype=torch.float32)\n    for b in range(mid.shape[0]):\n        acc = acc + mid[b]\n    return acc * x2_scale.float()\n",
+  "description": "Model that performs quantized matmul reduce sum.\nComputes quantized grouped matrix multiplication and sums results across all groups.\n\nForward logic:\n    1. mid = bmm(x1.float(), x2.float()) * x1_scale.unsqueeze(-1)  # [batch, M, N]\n    2. acc = zeros(M, N, fp32)\n    3. for b in range(batch): acc = acc + mid[b]  # fp32 sequential accumulation\n    4. return acc * x2_scale.float()\n\nArgs:\n    x1 (Tensor): Left matrix, shape [batch, M, K], dtype int8.\n    x2 (Tensor): Right matrix, shape [batch, K, N], dtype int8.\n    x1_scale (Tensor): Left matrix quantization scale, shape [batch, M], dtype float32.\n    x2_scale (Tensor): Right matrix quantization scale, shape [N], dtype bfloat16.\n\nReturns:\n    Tensor: Sum of all group matmul results, shape [M, N], dtype float32."
+}

@@ -1,0 +1,15 @@
+{
+  "name": "gemm_bias",
+  "op_type": "matmul",
+  "axes": {},
+  "inputs": {
+    "a": {"description": "shape (M, K); supports float16"},
+    "b": {"description": "shape (K, N); supports float16"},
+    "bias": {"description": "shape (N,); supports float16; broadcasted across rows of (M, N)"}
+  },
+  "outputs": {
+    "c": {"description": "shape (M, N); same dtype as inputs"}
+  },
+  "reference": "import torch\ndef run(a, b, bias):\n    return torch.mm(a, b) + bias\n",
+  "description": "Fused GEMM with bias epilogue: C = A @ B + bias, where bias of shape (N,) is broadcast across each row. A representative Catlass GEMM-template workload: half-precision matrix multiply fused with a bias-add epilogue."
+}

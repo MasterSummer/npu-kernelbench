@@ -1,0 +1,25 @@
+{
+  "name": "Scatter",
+  "axes": {},
+  "inputs": {
+    "x": {
+      "description": "Input tensor, any shape (1D-4D). Supports float32, float16, bfloat16."
+    },
+    "dim": {
+      "description": "int, axis along which to index and scatter."
+    },
+    "index": {
+      "description": "Int64 tensor of indices, same rank as src. Values must be within [0, x.size(dim))."
+    },
+    "src": {
+      "description": "Source tensor, same shape as index, same dtype as x."
+    }
+  },
+  "outputs": {
+    "y": {
+      "description": "Tensor with scattered values added in-place, same shape and dtype as x."
+    }
+  },
+  "reference": "import torch\n\ndef run(x, dim, index, src):\n    return torch.scatter_add(x, dim, index, src)\n",
+  "description": "torch.scatter_add = scatter_add(input, dim, index, src) -> Tensor\n\nAdds all values from the tensor src into input at the indices specified in\nthe index tensor. For each value in src, its output index is specified by\nits index in src for dimension != dim and by the corresponding value in\nindex for dimension = dim.\n\nEquivalent to aclnnScatterAdd.\n\nArgs:\n    input (Tensor): the input tensor.\n    dim (int): the axis along which to index.\n    index (LongTensor): the indices of elements to scatter.\n    src (Tensor): the source tensor.\n\nReturns:\n    Tensor: the output tensor.\n\nExample::\n\n    >>> input = torch.zeros(3, 5)\n    >>> src = torch.ones(2, 5)\n    >>> index = torch.tensor([[0, 1, 2, 0, 0], [0, 1, 2, 1, 2]])\n    >>> torch.scatter_add(input, 1, index, src)\n    tensor([[2., 1., 1., 0., 0.],\n            [1., 2., 1., 1., 1.],\n            [0., 0., 0., 0., 0.]])"
+}
